@@ -1,16 +1,31 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import Sidebar from "@/components/Sidebar";
+import DashboardView from "@/components/DashboardView";
+import MapView from "@/components/MapView";
+import GoalsView from "@/components/GoalsView";
+import LeaderboardView from "@/components/LeaderboardView";
+import RewardsView from "@/components/RewardsView";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const views: Record<string, React.FC> = {
+  dashboard: DashboardView,
+  map: MapView,
+  goals: GoalsView,
+  leaderboard: LeaderboardView,
+  rewards: RewardsView,
+};
+
+const Index = () => {
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const ActiveView = views[activeTab] || DashboardView;
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+        <ActiveView />
+      </main>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
