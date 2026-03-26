@@ -5,13 +5,17 @@ import MapView from "@/components/MapView";
 import GoalsView from "@/components/GoalsView";
 import LeaderboardView from "@/components/LeaderboardView";
 import RewardsView from "@/components/RewardsView";
+import DealsView from "@/components/DealsView";
+import EcosystemsView from "@/components/EcosystemsView";
 
 const views: Record<string, React.FC> = {
   dashboard: DashboardView,
+  deals: DealsView,
   map: MapView,
   goals: GoalsView,
   leaderboard: LeaderboardView,
   rewards: RewardsView,
+  ecosystems: EcosystemsView,
 };
 
 const Index = () => {
