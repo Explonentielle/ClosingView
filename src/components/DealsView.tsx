@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Search, Plus, Filter, ArrowUpDown, X } from "lucide-react";
+import { Search, Plus, ArrowUpDown } from "lucide-react";
+import { Link } from "react-router-dom";
 
 type DealStatus = "En cours" | "Gagné" | "Perdu";
 
@@ -29,80 +30,10 @@ const statusColor: Record<DealStatus, string> = {
   "Perdu": "bg-destructive/10 text-destructive",
 };
 
-interface AddDealFormProps {
-  onAdd: (deal: Omit<Deal, "id">) => void;
-  onClose: () => void;
-}
-
-const AddDealForm = ({ onAdd, onClose }: AddDealFormProps) => {
-  const [name, setName] = useState("");
-  const [client, setClient] = useState("");
-  const [amount, setAmount] = useState("");
-  const [commissionRate, setCommissionRate] = useState("10");
-  const [status, setStatus] = useState<DealStatus>("En cours");
-
-  const computedCommission = (parseFloat(amount) || 0) * (parseFloat(commissionRate) || 0) / 100;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onAdd({ name, client, amount: parseFloat(amount), commission: computedCommission, status });
-    onClose();
-  };
-
-  const inputClass = "w-full h-10 rounded-lg border border-input bg-secondary/50 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all";
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass-card p-6 w-full max-w-md animate-slide-up" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-semibold">Ajouter un Deal</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Nom du Deal</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Contrat SaaS" className={inputClass} required />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Client</label>
-            <input value={client} onChange={(e) => setClient(e.target.value)} placeholder="Ex: TechCorp" className={inputClass} required />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Montant (€)</label>
-              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="10000" className={inputClass} required />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Commission (%)</label>
-              <input type="number" value={commissionRate} onChange={(e) => setCommissionRate(e.target.value)} placeholder="10" className={inputClass} />
-            </div>
-          </div>
-          <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border/50">
-            <span className="text-xs text-muted-foreground">Commission calculée</span>
-            <span className="text-sm font-semibold text-primary">€{computedCommission.toLocaleString("fr-FR", { minimumFractionDigits: 0 })}</span>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Statut</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value as DealStatus)} className={inputClass}>
-              <option value="En cours">En cours</option>
-              <option value="Gagné">Gagné</option>
-              <option value="Perdu">Perdu</option>
-            </select>
-          </div>
-          <button type="submit" className="w-full h-10 rounded-lg gradient-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
-            Ajouter le deal
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-};
-
 const DealsView = () => {
-  const [deals, setDeals] = useState(mockDeals);
+  const [deals] = useState(mockDeals);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<DealStatus | "Tous">("Tous");
-  const [showForm, setShowForm] = useState(false);
   const [sortBy, setSortBy] = useState<"amount" | "commission" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
@@ -119,10 +50,6 @@ const DealsView = () => {
     else { setSortBy(col); setSortDir("desc"); }
   };
 
-  const handleAdd = (deal: Omit<Deal, "id">) => {
-    setDeals([...deals, { ...deal, id: deals.length + 1 }]);
-  };
-
   const totalCA = deals.filter(d => d.status === "Gagné").reduce((s, d) => s + d.amount, 0);
   const totalComm = deals.filter(d => d.status === "Gagné").reduce((s, d) => s + d.commission, 0);
 
@@ -133,9 +60,9 @@ const DealsView = () => {
           <h2 className="text-2xl font-bold">Deals</h2>
           <p className="text-muted-foreground text-sm mt-1">Gérez tous vos deals commerciaux</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="gradient-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 shrink-0">
+        <Link to="/deals/new" className="gradient-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 shrink-0">
           <Plus size={16} /> Ajouter un Deal
-        </button>
+        </Link>
       </div>
 
       {/* Stats summary */}
@@ -218,8 +145,6 @@ const DealsView = () => {
           </table>
         </div>
       </div>
-
-      {showForm && <AddDealForm onAdd={handleAdd} onClose={() => setShowForm(false)} />}
     </div>
   );
 };
