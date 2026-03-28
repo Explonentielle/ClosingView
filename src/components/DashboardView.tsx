@@ -1,4 +1,5 @@
-import { TrendingUp, Users, Target, DollarSign, Briefcase, ArrowRight } from "lucide-react";
+import { TrendingUp, Target, DollarSign, Briefcase, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const stats = [
   { label: "Deals Closés", value: "147", change: "+12%", icon: Briefcase, gradient: "gradient-primary" },
@@ -22,6 +23,8 @@ const weeklyData = [
   { day: "Ven", pct: 73 },
 ];
 
+const goalProgress = 78;
+
 const DashboardView = () => (
   <div className="space-y-6 animate-slide-up">
     <div className="flex items-center justify-between">
@@ -30,9 +33,12 @@ const DashboardView = () => (
         <p className="text-muted-foreground text-sm mt-1">Vue d'ensemble de vos performances</p>
       </div>
       <div className="flex gap-2">
-        <button className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+        <Link to="/deals/new" className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
           Ajouter un deal <ArrowRight size={14} />
-        </button>
+        </Link>
+        <Link to="/deals" className="bg-secondary text-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-secondary/80 transition-colors">
+          Voir les deals
+        </Link>
       </div>
     </div>
 
@@ -51,11 +57,25 @@ const DashboardView = () => (
       ))}
     </div>
 
+    {/* Monthly Goal Progress */}
+    <div className="glass-card p-5">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h3 className="font-semibold">Objectif Mensuel</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">€284K / €365K</p>
+        </div>
+        <span className="text-2xl font-bold text-primary">{goalProgress}%</span>
+      </div>
+      <div className="h-3 bg-secondary rounded-full overflow-hidden">
+        <div className="h-full gradient-primary rounded-full transition-all duration-1000" style={{ width: `${goalProgress}%` }} />
+      </div>
+    </div>
+
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="glass-card p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold">Activité Récente</h3>
-          <button className="text-xs text-primary hover:underline">Voir tout</button>
+          <Link to="/leaderboard" className="text-xs text-primary hover:underline">Voir tout</Link>
         </div>
         <div className="space-y-4">
           {recentActivity.map((a, i) => (
