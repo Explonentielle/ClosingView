@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, X, Users, TrendingUp, ExternalLink, ChevronRight, Calendar, Target, Trophy } from "lucide-react";
+import { toast } from "sonner";
 
 interface Ecosystem {
   id: number;
@@ -50,10 +51,23 @@ const challengeStatusStyle: Record<string, string> = {
 const EcosystemsView = () => {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Ecosystem | null>(null);
+  const [joined, setJoined] = useState<Set<number>>(new Set());
+  const [participating, setParticipating] = useState<Set<number>>(new Set());
 
   const filtered = ecosystems.filter((e) =>
     e.name.toLowerCase().includes(search.toLowerCase()) || e.theme.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleJoin = (eco: Ecosystem) => {
+    setJoined((prev) => new Set(prev).add(eco.id));
+    toast.success(`Demande envoyée à ${eco.name} !`, { description: "Vous serez notifié de la réponse." });
+    setSelected(null);
+  };
+
+  const handleParticipate = (ch: Challenge) => {
+    setParticipating((prev) => new Set(prev).add(ch.id));
+    toast.success(`Inscrit au challenge "${ch.name}" !`);
+  };
 
   return (
     <div className="space-y-8 animate-slide-up">
@@ -77,7 +91,7 @@ const EcosystemsView = () => {
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map((eco) => (
-          <div key={eco.id} className="glass-card p-5 hover:border-primary/30 transition-all duration-300 group cursor-pointer" onClick={() => setSelected(eco)}>
+          <div key={eco.id} className="glass-card p-5 hover:border-primary/30 transition-all duration-300 group">
             <div className="flex items-start gap-3 mb-4">
               <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center text-sm font-bold text-primary-foreground shrink-0">
                 {eco.logo}
@@ -90,13 +104,14 @@ const EcosystemsView = () => {
             <div className="flex flex-wrap gap-2 mb-4">
               {eco.partner && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">Partenaire</span>}
               {eco.challengeActive && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-400/10 text-amber-400">Challenge actif</span>}
+              {joined.has(eco.id) && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent/10 text-accent">Rejoint ✓</span>}
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><Users size={12} /> {eco.closers}</span>
                 <span className="flex items-center gap-1"><TrendingUp size={12} /> {eco.avgCommission}</span>
               </div>
-              <button className="text-xs text-primary font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => setSelected(eco)} className="text-xs text-primary font-medium flex items-center gap-1 hover:underline">
                 Voir <ChevronRight size={12} />
               </button>
             </div>
@@ -121,13 +136,18 @@ const EcosystemsView = () => {
                 <div className="flex items-center gap-2"><Target size={12} /> {ch.objective}</div>
                 <div className="flex items-center gap-2"><Users size={12} /> {ch.participants} participants</div>
               </div>
-              {ch.status === "À venir" && (
-                <button className="mt-4 w-full h-9 rounded-lg gradient-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity">
+              {ch.status === "À venir" && !participating.has(ch.id) && (
+                <button onClick={() => handleParticipate(ch)} className="mt-4 w-full h-9 rounded-lg gradient-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity">
                   Participer
                 </button>
               )}
+              {ch.status === "À venir" && participating.has(ch.id) && (
+                <button disabled className="mt-4 w-full h-9 rounded-lg bg-accent/10 text-accent text-xs font-medium cursor-default">
+                  ✓ Inscrit
+                </button>
+              )}
               {ch.status === "En cours" && (
-                <button className="mt-4 w-full h-9 rounded-lg bg-secondary text-foreground text-xs font-medium hover:bg-secondary/80 transition-colors">
+                <button onClick={() => toast.info(`Classement du challenge "${ch.name}" bientôt disponible`)} className="mt-4 w-full h-9 rounded-lg bg-secondary text-foreground text-xs font-medium hover:bg-secondary/80 transition-colors">
                   Voir le classement
                 </button>
               )}
@@ -164,10 +184,16 @@ const EcosystemsView = () => {
               </div>
             </div>
             <div className="flex gap-3">
-              <button className="flex-1 h-10 rounded-lg gradient-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
-                Rejoindre
-              </button>
-              <button className="h-10 px-4 rounded-lg bg-secondary text-foreground text-sm font-medium hover:bg-secondary/80 transition-colors flex items-center gap-2">
+              {joined.has(selected.id) ? (
+                <button disabled className="flex-1 h-10 rounded-lg bg-accent/10 text-accent text-sm font-medium cursor-default">
+                  ✓ Demande envoyée
+                </button>
+              ) : (
+                <button onClick={() => handleJoin(selected)} className="flex-1 h-10 rounded-lg gradient-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+                  Rejoindre
+                </button>
+              )}
+              <button onClick={() => toast.info("Lien externe bientôt disponible")} className="h-10 px-4 rounded-lg bg-secondary text-foreground text-sm font-medium hover:bg-secondary/80 transition-colors flex items-center gap-2">
                 <ExternalLink size={14} /> Site
               </button>
             </div>

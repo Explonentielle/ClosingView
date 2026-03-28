@@ -14,6 +14,7 @@ import GoalsView from "./components/GoalsView";
 import LeaderboardView from "./components/LeaderboardView";
 import RewardsView from "./components/RewardsView";
 import EcosystemsView from "./components/EcosystemsView";
+import SettingsView from "./pages/SettingsView";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="leaderboard" element={<LeaderboardView />} />
             <Route path="rewards" element={<RewardsView />} />
             <Route path="ecosystems" element={<EcosystemsView />} />
+            <Route path="settings" element={<SettingsView />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

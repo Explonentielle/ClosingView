@@ -1,5 +1,6 @@
 import { MapPin, Phone, Mail, Search, Filter, ZoomIn, ZoomOut, User } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface Closer {
   id: number;
@@ -11,17 +12,19 @@ interface Closer {
   avatar: string;
   deals: number;
   revenue: string;
+  email: string;
+  phone: string;
 }
 
 const closers: Closer[] = [
-  { id: 1, name: "Sophie Martin", role: "Senior Closer", city: "Paris", sectors: ["SaaS", "B2B"], available: true, avatar: "SM", deals: 52, revenue: "€145K" },
-  { id: 2, name: "Lucas Bernard", role: "Closer", city: "Lyon", sectors: ["E-commerce"], available: true, avatar: "LB", deals: 47, revenue: "€132K" },
-  { id: 3, name: "Emma Dubois", role: "Senior Closer", city: "Marseille", sectors: ["Finance", "Assurance"], available: false, avatar: "ED", deals: 43, revenue: "€118K" },
-  { id: 4, name: "Thomas Petit", role: "Closer", city: "Bordeaux", sectors: ["Coaching"], available: true, avatar: "TP", deals: 38, revenue: "€98K" },
-  { id: 5, name: "Léa Moreau", role: "Closer", city: "Lille", sectors: ["Marketing", "SaaS"], available: true, avatar: "LM", deals: 35, revenue: "€92K" },
-  { id: 6, name: "Hugo Laurent", role: "Junior Closer", city: "Toulouse", sectors: ["Santé"], available: false, avatar: "HL", deals: 31, revenue: "€84K" },
-  { id: 7, name: "Chloé Roux", role: "Closer", city: "Nantes", sectors: ["B2B", "Tech"], available: true, avatar: "CR", deals: 28, revenue: "€76K" },
-  { id: 8, name: "Antoine Leroy", role: "Closer", city: "Strasbourg", sectors: ["Finance"], available: true, avatar: "AL", deals: 25, revenue: "€68K" },
+  { id: 1, name: "Sophie Martin", role: "Senior Closer", city: "Paris", sectors: ["SaaS", "B2B"], available: true, avatar: "SM", deals: 52, revenue: "€145K", email: "sophie@closeone.io", phone: "+33 6 12 34 56 78" },
+  { id: 2, name: "Lucas Bernard", role: "Closer", city: "Lyon", sectors: ["E-commerce"], available: true, avatar: "LB", deals: 47, revenue: "€132K", email: "lucas@closeone.io", phone: "+33 6 23 45 67 89" },
+  { id: 3, name: "Emma Dubois", role: "Senior Closer", city: "Marseille", sectors: ["Finance", "Assurance"], available: false, avatar: "ED", deals: 43, revenue: "€118K", email: "emma@closeone.io", phone: "+33 6 34 56 78 90" },
+  { id: 4, name: "Thomas Petit", role: "Closer", city: "Bordeaux", sectors: ["Coaching"], available: true, avatar: "TP", deals: 38, revenue: "€98K", email: "thomas@closeone.io", phone: "+33 6 45 67 89 01" },
+  { id: 5, name: "Léa Moreau", role: "Closer", city: "Lille", sectors: ["Marketing", "SaaS"], available: true, avatar: "LM", deals: 35, revenue: "€92K", email: "lea@closeone.io", phone: "+33 6 56 78 90 12" },
+  { id: 6, name: "Hugo Laurent", role: "Junior Closer", city: "Toulouse", sectors: ["Santé"], available: false, avatar: "HL", deals: 31, revenue: "€84K", email: "hugo@closeone.io", phone: "+33 6 67 89 01 23" },
+  { id: 7, name: "Chloé Roux", role: "Closer", city: "Nantes", sectors: ["B2B", "Tech"], available: true, avatar: "CR", deals: 28, revenue: "€76K", email: "chloe@closeone.io", phone: "+33 6 78 90 12 34" },
+  { id: 8, name: "Antoine Leroy", role: "Closer", city: "Strasbourg", sectors: ["Finance"], available: true, avatar: "AL", deals: 25, revenue: "€68K", email: "antoine@closeone.io", phone: "+33 6 89 01 23 45" },
 ];
 
 const cityPositions: Record<string, { x: number; y: number }> = {
@@ -51,6 +54,15 @@ const MapView = () => {
   });
 
   const cities = [...new Set(closers.map((c) => c.city))];
+
+  const handleContact = (type: "phone" | "email") => {
+    if (!selected) return;
+    if (type === "phone") {
+      toast.success(`Appel vers ${selected.phone}`, { description: selected.name });
+    } else {
+      toast.success(`Email envoyé à ${selected.email}`, { description: selected.name });
+    }
+  };
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -90,6 +102,7 @@ const MapView = () => {
           <div className="absolute top-4 right-4 z-10 flex flex-col gap-1.5">
             <button onClick={() => setZoom(Math.min(zoom + 0.2, 2))} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"><ZoomIn size={14} /></button>
             <button onClick={() => setZoom(Math.max(zoom - 0.2, 0.6))} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"><ZoomOut size={14} /></button>
+            <button onClick={() => setZoom(1)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-xs font-bold">1x</button>
           </div>
 
           <div style={{ transform: `scale(${zoom})`, transformOrigin: "center", transition: "transform 0.3s ease" }} className="w-full h-full">
@@ -149,10 +162,10 @@ const MapView = () => {
                 </div>
               </div>
               <div className="flex gap-2 pt-2">
-                <button className="flex-1 h-9 rounded-lg gradient-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5">
+                <button onClick={() => handleContact("phone")} className="flex-1 h-9 rounded-lg gradient-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5">
                   <Phone size={12} /> Contacter
                 </button>
-                <button className="flex-1 h-9 rounded-lg bg-secondary text-foreground text-xs font-medium hover:bg-secondary/80 transition-colors flex items-center justify-center gap-1.5">
+                <button onClick={() => handleContact("email")} className="flex-1 h-9 rounded-lg bg-secondary text-foreground text-xs font-medium hover:bg-secondary/80 transition-colors flex items-center justify-center gap-1.5">
                   <Mail size={12} /> Email
                 </button>
               </div>
