@@ -156,6 +156,29 @@ const EcosystemsView = () => {
         </div>
       </div>
 
+      {/* Top Closers des Écosystèmes */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Top Closers des Écosystèmes</h3>
+        <div className="glass-card divide-y divide-border/30">
+          {[
+            { name: "Sophie Martin", initials: "SM", eco: "ScaleUp Academy", ca: "€145K", badges: ["elite", "top5"] },
+            { name: "Lucas Bernard", initials: "LB", eco: "CloserPro", ca: "€132K", badges: ["elite", "top5"] },
+            { name: "Emma Dubois", initials: "ED", eco: "Digital Empire", ca: "€118K", badges: ["elite"] },
+            { name: "Thomas Petit", initials: "TP", eco: "FinanceFlow", ca: "€98K", badges: ["elite"] },
+            { name: "Léa Moreau", initials: "LM", eco: "ScaleUp Academy", ca: "€92K", badges: ["elite"] },
+          ].map((c, i) => (
+            <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-secondary/50 transition-colors">
+              <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground shrink-0">{c.initials}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{c.name}</p>
+                <p className="text-xs text-muted-foreground">{c.eco}</p>
+              </div>
+              <span className="text-sm font-bold text-primary">{c.ca}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Ecosystem Detail Modal */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm" onClick={() => setSelected(null)}>
