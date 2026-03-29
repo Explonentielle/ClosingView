@@ -1,4 +1,4 @@
-import { BarChart3, Map, Target, Trophy, Gift, Briefcase, Globe, Settings, Zap, LogOut } from "lucide-react";
+import { BarChart3, Map, Target, Trophy, Gift, Briefcase, Globe, Settings, Zap, LogOut, User, BookOpen } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const navItems = [
@@ -9,6 +9,8 @@ const navItems = [
   { icon: Trophy, label: "Classement", path: "/leaderboard" },
   { icon: Gift, label: "Récompenses", path: "/rewards" },
   { icon: Globe, label: "Écosystèmes", path: "/ecosystems" },
+  { icon: BookOpen, label: "Climb", path: "/climb" },
+  { icon: User, label: "Profil", path: "/profile" },
 ];
 
 const Sidebar = () => {
@@ -33,7 +35,7 @@ const Sidebar = () => {
           </div>
         </Link>
       </div>
-      <nav className="flex-1 space-y-0.5 px-2 lg:px-3">
+      <nav className="flex-1 space-y-0.5 px-2 lg:px-3 overflow-y-auto">
         {navItems.map(({ icon: Icon, label, path }) => {
           const isActive = location.pathname.startsWith(path);
           return (
@@ -42,7 +44,7 @@ const Sidebar = () => {
               to={path}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                 isActive
-                  ? "bg-primary/10 text-primary glow-primary"
+                  ? "bg-primary/10 text-primary border-l-2 border-primary"
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               }`}
             >
@@ -53,7 +55,7 @@ const Sidebar = () => {
         })}
       </nav>
       <div className="px-2 lg:px-3 space-y-0.5">
-        <Link to="/settings" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all">
+        <Link to="/settings" className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${location.pathname === "/settings" ? "bg-primary/10 text-primary border-l-2 border-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
           <Settings size={18} className="shrink-0" />
           <span className="hidden lg:inline text-sm font-medium">Paramètres</span>
         </Link>
