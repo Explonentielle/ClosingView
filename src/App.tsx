@@ -15,6 +15,8 @@ import LeaderboardView from "./components/LeaderboardView";
 import RewardsView from "./components/RewardsView";
 import EcosystemsView from "./components/EcosystemsView";
 import SettingsView from "./pages/SettingsView";
+import ProfileView from "./pages/ProfileView";
+import ClimbView from "./pages/ClimbView";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +39,8 @@ const App = () => (
             <Route path="rewards" element={<RewardsView />} />
             <Route path="ecosystems" element={<EcosystemsView />} />
             <Route path="settings" element={<SettingsView />} />
+            <Route path="profile" element={<ProfileView />} />
+            <Route path="climb" element={<ClimbView />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
