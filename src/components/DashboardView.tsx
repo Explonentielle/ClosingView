@@ -1,113 +1,201 @@
-import { TrendingUp, Target, DollarSign, Briefcase, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Phone, PhoneForwarded, Clock, Trophy, DollarSign, Percent } from "lucide-react";
 
-const stats = [
-  { label: "Deals Closés", value: "147", change: "+12%", icon: Briefcase, gradient: "gradient-primary" },
-  { label: "CA Total", value: "€284K", change: "+18%", icon: DollarSign, gradient: "gradient-primary" },
-  { label: "Commissions", value: "€34K", change: "+22%", icon: TrendingUp, gradient: "gradient-accent" },
-  { label: "% Objectif", value: "78%", change: "+8%", icon: Target, gradient: "gradient-primary" },
+const kpis = [
+  { label: "CALLS R1", value: "18", sub: "+3 ce mois", subColor: "text-primary", icon: Phone, highlight: false },
+  { label: "CALLS R2", value: "9", sub: "50% conv. R1", subColor: "text-muted-foreground", icon: PhoneForwarded, highlight: false },
+  { label: "FOLLOW UP", value: "4", sub: "En attente", subColor: "text-muted-foreground", icon: Clock, highlight: false },
+  { label: "CLOSES", value: "6", sub: "Record mois", subColor: "text-primary", icon: Trophy, highlight: false },
+  { label: "CASH COLLECTÉ", value: "7 400€", sub: "Comm: 740€", subColor: "text-muted-foreground", icon: DollarSign, highlight: false },
+  { label: "CLOSING %", value: "33%", sub: "Top 20%", subColor: "text-primary", icon: Percent, highlight: true },
 ];
 
-const recentActivity = [
-  { name: "Sophie Martin", action: "a closé un deal de €12,500", time: "il y a 2min", avatar: "SM" },
-  { name: "Lucas Bernard", action: "a atteint l'objectif mensuel", time: "il y a 15min", avatar: "LB" },
-  { name: "Emma Dubois", action: "a débloqué 'Closer Elite'", time: "il y a 1h", avatar: "ED" },
-  { name: "Thomas Petit", action: "a monté au rang #3", time: "il y a 2h", avatar: "TP" },
-];
+const calendarDeals: Record<number, number> = {
+  3: 800, 5: 1200, 10: 1500, 14: 900, 17: 1800, 31: 300,
+};
+
+const weekDays = ["L", "M", "M", "J", "V", "S", "D"];
+
+// March 2026 starts on Sunday (day 0), so offset = 6 (Sun at end of week in Mon-start grid)
+const firstDayOffset = 6; // March 1, 2026 is Sunday → index 6 in Mon-start week
+const totalDays = 31;
 
 const weeklyData = [
-  { day: "Lun", pct: 65 },
-  { day: "Mar", pct: 82 },
-  { day: "Mer", pct: 45 },
-  { day: "Jeu", pct: 90 },
-  { day: "Ven", pct: 73 },
+  { label: "S1", value: "2 000€", active: true },
+  { label: "S2", value: "2 400€", active: true },
+  { label: "S3", value: "1 800€", active: true },
+  { label: "S4", value: "0€", active: false },
 ];
 
-const goalProgress = 78;
+const quotes = [
+  "The deal is won before the call.",
+  "Chaque non t'approche d'un oui.",
+  "La tonalité fait le closing.",
+  "Prépare tes objections la veille.",
+  "Un closer ne vend pas, il résout.",
+];
 
-const DashboardView = () => (
-  <div className="space-y-6 animate-slide-up">
-    <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-2xl font-bold">Tableau de Bord</h2>
-        <p className="text-muted-foreground text-sm mt-1">Vue d'ensemble de vos performances</p>
-      </div>
-      <div className="flex gap-2">
-        <Link to="/deals/new" className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
-          Ajouter un deal <ArrowRight size={14} />
-        </Link>
-        <Link to="/deals" className="bg-secondary text-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-secondary/80 transition-colors">
-          Voir les deals
-        </Link>
-      </div>
-    </div>
+const cumulativePoints = [
+  { x: 0, y: 0 },
+  { x: 3, y: 800 },
+  { x: 5, y: 2000 },
+  { x: 10, y: 3500 },
+  { x: 14, y: 4400 },
+  { x: 17, y: 6200 },
+  { x: 31, y: 7400 },
+];
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      {stats.map((s) => (
-        <div key={s.label} className="glass-card p-5 group hover:border-primary/30 transition-all duration-300">
-          <div className="flex items-center justify-between mb-3">
-            <div className={`w-10 h-10 rounded-lg ${s.gradient} flex items-center justify-center`}>
-              <s.icon size={18} className="text-primary-foreground" />
+const DashboardView = () => {
+  const [_q] = useState(0);
+
+  // Build calendar grid cells
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstDayOffset; i++) cells.push(null);
+  for (let d = 1; d <= totalDays; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  // SVG chart helpers
+  const chartW = 800;
+  const chartH = 160;
+  const maxY = 7400;
+  const toX = (day: number) => (day / 31) * chartW;
+  const toY = (val: number) => chartH - (val / maxY) * (chartH - 20);
+  const pathD = cumulativePoints.map((p, i) => `${i === 0 ? "M" : "L"}${toX(p.x)},${toY(p.y)}`).join(" ");
+  const areaD = `${pathD} L${toX(31)},${chartH} L0,${chartH} Z`;
+
+  return (
+    <div className="space-y-3 animate-slide-up max-w-[1440px] mx-auto">
+      {/* Section 1 — KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {kpis.map((k) => (
+          <div
+            key={k.label}
+            className="rounded-[10px] p-4"
+            style={{
+              background: "#111827",
+              border: k.highlight ? "2px solid hsl(var(--primary))" : "0.5px solid #1e2530",
+            }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <k.icon size={13} className="text-muted-foreground" />
+              <span className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">{k.label}</span>
             </div>
-            <span className="text-primary text-xs font-semibold">{s.change}</span>
+            <p className={`text-2xl font-bold ${k.label === "CASH COLLECTÉ" ? "text-primary text-xl" : "text-foreground"}`}>
+              {k.value}
+            </p>
+            <p className={`text-[11px] mt-0.5 ${k.subColor}`}>{k.sub}</p>
           </div>
-          <p className="text-2xl font-bold">{s.value}</p>
-          <p className="text-muted-foreground text-xs mt-1">{s.label}</p>
-        </div>
-      ))}
-    </div>
-
-    {/* Monthly Goal Progress */}
-    <div className="glass-card p-5">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="font-semibold">Objectif Mensuel</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">€284K / €365K</p>
-        </div>
-        <span className="text-2xl font-bold text-primary">{goalProgress}%</span>
+        ))}
       </div>
-      <div className="h-3 bg-secondary rounded-full overflow-hidden">
-        <div className="h-full gradient-primary rounded-full transition-all duration-1000" style={{ width: `${goalProgress}%` }} />
-      </div>
-    </div>
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div className="glass-card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold">Activité Récente</h3>
-          <Link to="/leaderboard" className="text-xs text-primary hover:underline">Voir tout</Link>
-        </div>
-        <div className="space-y-4">
-          {recentActivity.map((a, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground shrink-0">
-                {a.avatar}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm"><span className="font-medium">{a.name}</span>{" "}<span className="text-muted-foreground">{a.action}</span></p>
-                <p className="text-xs text-muted-foreground">{a.time}</p>
-              </div>
+      {/* Section 2 — Calendar + Score */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-3">
+        {/* Calendar */}
+        <div className="rounded-[12px] p-5" style={{ background: "#111827", border: "0.5px solid #1e2530" }}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-semibold text-foreground">Mars 2026</h3>
+            <span className="text-[11px] text-primary font-medium">7 400€ — 6 jours actifs</span>
+          </div>
+
+          {/* Day headers */}
+          <div className="grid grid-cols-7 gap-1 mb-1">
+            {weekDays.map((d, i) => (
+              <div key={i} className="text-center text-[10px] font-medium text-muted-foreground py-1">{d}</div>
+            ))}
+          </div>
+
+          {/* Day cells */}
+          <div className="grid grid-cols-7 gap-1">
+            {cells.map((day, i) => {
+              if (day === null) return <div key={i} />;
+              const deal = calendarDeals[day];
+              const isToday = day === 31;
+              return (
+                <div
+                  key={i}
+                  className="rounded-lg text-center py-1.5 px-0.5"
+                  style={{
+                    background: deal ? "#0F3020" : "#1a1f2e",
+                    border: isToday ? "1px solid hsl(var(--primary))" : "none",
+                    minHeight: 40,
+                  }}
+                >
+                  <div className={`text-[10px] ${deal ? "text-primary" : "text-muted-foreground"}`}>{day}</div>
+                  <div className={`text-[10px] font-medium ${deal ? "text-primary" : "text-muted-foreground"}`}>
+                    {deal ? `${deal}€` : "0€"}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="flex gap-4 mt-3">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-sm" style={{ background: "#0F3020" }} />
+              <span className="text-[10px] text-muted-foreground">Deal closé</span>
             </div>
-          ))}
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-sm" style={{ background: "#1a1f2e" }} />
+              <span className="text-[10px] text-muted-foreground">Pas de close</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Score Column */}
+        <div className="flex flex-col gap-3">
+          {/* CloseOne Score */}
+          <div className="rounded-[12px] p-4" style={{ background: "#111827", border: "0.5px solid #1e2530" }}>
+            <span className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">CloseOne Score</span>
+            <p className="text-4xl font-bold text-primary mt-1">68</p>
+            <div className="h-1.5 rounded-full mt-2" style={{ background: "#1e2530" }}>
+              <div className="h-full rounded-full bg-primary" style={{ width: "68%" }} />
+            </div>
+            <p className="text-[11px] text-primary mt-1.5">Closer Confirmé</p>
+          </div>
+
+          {/* Per Week */}
+          <div className="rounded-[12px] p-4" style={{ background: "#111827", border: "0.5px solid #1e2530" }}>
+            <span className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">Par Semaine</span>
+            <div className="mt-2 space-y-1.5">
+              {weeklyData.map((w) => (
+                <div key={w.label} className="flex justify-between">
+                  <span className="text-[11px] text-muted-foreground">{w.label}</span>
+                  <span className={`text-[11px] font-semibold ${w.active ? "text-primary" : "text-muted-foreground"}`}>{w.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="glass-card p-5">
-        <h3 className="font-semibold mb-4">Performance Hebdo</h3>
-        <div className="space-y-3">
-          {weeklyData.map(({ day, pct }) => (
-            <div key={day} className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground w-8">{day}</span>
-              <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-                <div className="h-full gradient-primary rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
-              </div>
-              <span className="text-xs text-muted-foreground w-8 text-right">{pct}%</span>
-            </div>
+      {/* Section 3 — Cumulative Cash Chart */}
+      <div className="rounded-[12px] p-5" style={{ background: "#111827", border: "0.5px solid #1e2530" }}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-base font-semibold text-foreground">Cash collecté cumulé</h3>
+          <span className="text-lg font-bold text-primary">7 400€</span>
+        </div>
+        <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(155,100%,50%)" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="hsl(155,100%,50%)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={areaD} fill="url(#areaGrad)" />
+          <path d={pathD} fill="none" stroke="hsl(155,100%,50%)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          {cumulativePoints.slice(1).map((p, i) => (
+            <circle key={i} cx={toX(p.x)} cy={toY(p.y)} r="3" fill="hsl(155,100%,50%)" />
           ))}
+        </svg>
+        <div className="flex justify-between mt-1">
+          <span className="text-[10px] text-muted-foreground">1 mars</span>
+          <span className="text-[10px] text-muted-foreground">15 mars</span>
+          <span className="text-[10px] text-muted-foreground">31 mars</span>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default DashboardView;
