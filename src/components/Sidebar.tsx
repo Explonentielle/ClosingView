@@ -9,7 +9,7 @@ const navItems = [
   { icon: Trophy, label: "Classement", path: "/leaderboard" },
   { icon: Gift, label: "Récompenses", path: "/rewards" },
   { icon: Globe, label: "Écosystèmes", path: "/ecosystems" },
-  { icon: BookOpen, label: "Climb", path: "/climb" },
+  
   { icon: User, label: "Profil", path: "/profile" },
 ];
 

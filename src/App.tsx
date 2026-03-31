@@ -40,7 +40,7 @@ const App = () => (
             <Route path="ecosystems" element={<EcosystemsView />} />
             <Route path="settings" element={<SettingsView />} />
             <Route path="profile" element={<ProfileView />} />
-            <Route path="climb" element={<ClimbView />} />
+            
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
