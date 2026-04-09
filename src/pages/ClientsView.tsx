@@ -22,7 +22,7 @@ const ClientsView = () => {
   const [clients, setClients] = useState(mockClients);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [newClient, setNewClient] = useState({ name: "", niche: niches[0], status: "Actif" as const });
+  const [newClient, setNewClient] = useState<{ name: string; niche: string; status: "Actif" | "Inactif" }>({ name: "", niche: niches[0], status: "Actif" });
 
   const filtered = clients.filter(
     (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.niche.toLowerCase().includes(search.toLowerCase())
