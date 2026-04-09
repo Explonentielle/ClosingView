@@ -1,5 +1,8 @@
 import { Mail, Phone, MapPin, Calendar, Trophy, Target, TrendingUp, Users, Zap } from "lucide-react";
 import CloserBadge, { BADGE_CONFIGS, getBadgesForCA } from "@/components/CloserBadge";
+import CloseScoreCard from "@/components/dashboard/CloseScoreCard";
+import CloseScoreRadar from "@/components/dashboard/CloseScoreRadar";
+import { getScoreInfo } from "@/components/dashboard/CloseScoreCard";
 
 const profile = {
   name: "Julien De Bonnières",
@@ -14,6 +17,7 @@ const profile = {
   dealsTotal: 42,
   tauxClosing: 74,
   certified: true,
+  closeScore: 82,
 };
 
 const earnedBadges = getBadgesForCA(profile.caMensuel, profile.certified);
@@ -22,6 +26,9 @@ const badgeProgressData = BADGE_CONFIGS.filter((b) => b.key !== "certified").map
   const pct = Math.min(100, Math.round((profile.caMensuel / b.threshold) * 100));
   return { ...b, progress: pct, unlocked: profile.caMensuel >= b.threshold };
 });
+
+const scoreInfo = getScoreInfo(profile.closeScore);
+const fullPayPct = 65;
 
 const ProfileView = () => (
   <div className="space-y-6 animate-slide-up">
@@ -38,11 +45,33 @@ const ProfileView = () => (
         </div>
         <div>
           <h3 className="font-bold text-xl">{profile.name}</h3>
-          <p className="text-sm text-[#A0A0A0]">{profile.role}</p>
+          <p className="text-sm text-muted-foreground">{profile.role}</p>
+        </div>
+
+        {/* Close Score in profile */}
+        <div className="w-full rounded-[10px] p-4 bg-background border border-border/50">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">Close Score</span>
+            <span className="text-lg">{scoreInfo.icon}</span>
+          </div>
+          <p className="text-3xl font-bold text-primary">{Math.min(profile.closeScore, 95)}</p>
+          <p className="text-[11px] font-semibold text-primary mt-1">{scoreInfo.label}</p>
+
+          {/* Full Pay vs Split Pay */}
+          <div className="mt-3">
+            <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+              <span>Full Pay {fullPayPct}%</span>
+              <span>Split Pay {100 - fullPayPct}%</span>
+            </div>
+            <div className="h-2 rounded-full overflow-hidden flex">
+              <div className="h-full bg-primary transition-all" style={{ width: `${fullPayPct}%` }} />
+              <div className="h-full bg-warning transition-all" style={{ width: `${100 - fullPayPct}%` }} />
+            </div>
+          </div>
         </div>
 
         <div>
-          <p className="text-[11px] font-semibold text-[#A0A0A0] tracking-[1.5px] mb-3">BADGES GAGNÉS</p>
+          <p className="text-[11px] font-semibold text-muted-foreground tracking-[1.5px] mb-3">BADGES GAGNÉS</p>
           <div className="flex flex-wrap justify-center gap-2">
             {earnedBadges.map((b) => (
               <CloserBadge key={b.key} badge={b} />
@@ -50,7 +79,7 @@ const ProfileView = () => (
           </div>
         </div>
 
-        <div className="space-y-2 text-sm text-[#A0A0A0] w-full text-left">
+        <div className="space-y-2 text-sm text-muted-foreground w-full text-left">
           <div className="flex items-center gap-3"><Mail size={14} /> {profile.email}</div>
           <div className="flex items-center gap-3"><Phone size={14} /> {profile.phone}</div>
           <div className="flex items-center gap-3"><MapPin size={14} /> {profile.city}</div>
@@ -64,6 +93,13 @@ const ProfileView = () => (
 
       {/* RIGHT COLUMN */}
       <div className="space-y-6">
+        {/* Close Score Radar */}
+        <div className="glass-card p-6" style={{ borderRadius: 16 }}>
+          <h3 className="font-semibold text-[22px] mb-2">Close Score — Détail</h3>
+          <p className="text-[11px] text-muted-foreground mb-4">Score calculé sur 5 critères vérifiés par CloseOne</p>
+          <CloseScoreRadar />
+        </div>
+
         {/* Performance Card */}
         <div className="glass-card p-6" style={{ borderRadius: 16 }}>
           <div className="flex items-center justify-between mb-6">
@@ -97,13 +133,13 @@ const ProfileView = () => (
                 <CloserBadge badge={b} size={28} locked={!b.unlocked} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <span className={`text-sm font-medium ${b.unlocked ? "" : "text-[#A0A0A0]"}`}>{b.name}</span>
+                    <span className={`text-sm font-medium ${b.unlocked ? "" : "text-muted-foreground"}`}>{b.name}</span>
                     <span className="text-xs text-muted-foreground">€{b.threshold.toLocaleString()}</span>
                   </div>
-                  <div className="h-1.5 rounded-full" style={{ backgroundColor: "#2A2F35" }}>
+                  <div className="h-1.5 rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{ width: `${b.progress}%`, backgroundColor: "#00C27A" }}
+                      className="h-full rounded-full bg-primary transition-all duration-700"
+                      style={{ width: `${b.progress}%` }}
                     />
                   </div>
                 </div>
