@@ -1,34 +1,40 @@
 import { Phone, PhoneForwarded, Clock, Trophy, DollarSign, Percent } from "lucide-react";
+import CloseScoreCard from "./CloseScoreCard";
 
 const kpis = [
   { label: "CALLS R1", value: "18", sub: "+3 ce mois", subColor: "text-primary", icon: Phone, highlight: false },
   { label: "CALLS R2", value: "9", sub: "50% conv. R1", subColor: "text-muted-foreground", icon: PhoneForwarded, highlight: false },
   { label: "FOLLOW UP", value: "4", sub: "En attente", subColor: "text-muted-foreground", icon: Clock, highlight: false },
   { label: "CLOSES", value: "6", sub: "Record mois", subColor: "text-primary", icon: Trophy, highlight: false },
-  { label: "CASH COLLECTÉ", value: "7 400€", sub: "Comm: 740€", subColor: "text-muted-foreground", icon: DollarSign, highlight: false },
-  { label: "CLOSING %", value: "33%", sub: "Top 20%", subColor: "text-primary", icon: Percent, highlight: true },
+  { label: "CASH COLLECTÉ", value: "7 400€", sub: "Comm: 740€ · C2 du Close Score", subColor: "text-muted-foreground", icon: DollarSign, highlight: false },
+  { label: "CLOSING %", value: "33%", sub: "Top 20% · C1 du Close Score", subColor: "text-primary", icon: Percent, highlight: true },
 ];
 
 const DashboardTab = () => {
   return (
     <div className="space-y-3">
-      {/* Section A — KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {kpis.map((k) => (
-          <div
-            key={k.label}
-            className={`rounded-[10px] p-4 bg-card border ${k.highlight ? "border-primary border-2" : "border-border/50"}`}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <k.icon size={13} className="text-muted-foreground" />
-              <span className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">{k.label}</span>
+      {/* Section A — KPI Cards + Close Score */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {kpis.map((k) => (
+            <div
+              key={k.label}
+              className={`rounded-[10px] p-4 bg-card border ${k.highlight ? "border-primary border-2" : "border-border/50"}`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <k.icon size={13} className="text-muted-foreground" />
+                <span className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">{k.label}</span>
+              </div>
+              <p className={`text-2xl font-bold ${k.label === "CASH COLLECTÉ" ? "text-primary text-xl" : "text-foreground"}`}>
+                {k.value}
+              </p>
+              <p className={`text-[11px] mt-0.5 ${k.subColor}`}>{k.sub}</p>
             </div>
-            <p className={`text-2xl font-bold ${k.label === "CASH COLLECTÉ" ? "text-primary text-xl" : "text-foreground"}`}>
-              {k.value}
-            </p>
-            <p className={`text-[11px] mt-0.5 ${k.subColor}`}>{k.sub}</p>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        {/* Close Score */}
+        <CloseScoreCard score={82} />
       </div>
 
       {/* Section B — Commissions */}
@@ -38,7 +44,6 @@ const DashboardTab = () => {
           <span className="text-sm font-bold text-primary">740€ / 2 000€</span>
         </div>
 
-        {/* Bar 1 — Commissions */}
         <div className="mb-3">
           <div className="flex justify-between mb-1">
             <span className="text-[11px] text-primary">Commissions collectées</span>
@@ -49,7 +54,6 @@ const DashboardTab = () => {
           </div>
         </div>
 
-        {/* Bar 2 — Super Green Goal */}
         <div className="mb-4">
           <div className="flex justify-between mb-1">
             <span className="text-[11px] text-warning">Super Green Goal</span>
@@ -60,7 +64,6 @@ const DashboardTab = () => {
           </div>
         </div>
 
-        {/* Daily Summary */}
         <div className="rounded-[10px] p-3 bg-background">
           <span className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">Résumé du jour — 31 mars</span>
           <div className="grid grid-cols-5 gap-2 mt-2">
