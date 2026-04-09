@@ -1,4 +1,5 @@
-import { Phone, PhoneForwarded, Clock, Trophy, DollarSign, Percent } from "lucide-react";
+import { useState } from "react";
+import { Phone, PhoneForwarded, Clock, Trophy, DollarSign, Percent, Plus, Target, TrendingUp, CheckCircle2, AlertCircle } from "lucide-react";
 import CloseScoreCard from "./CloseScoreCard";
 
 const kpis = [
@@ -10,7 +11,44 @@ const kpis = [
   { label: "CLOSING %", value: "33%", sub: "Top 20% · C1 du Close Score", subColor: "text-primary", icon: Percent, highlight: true },
 ];
 
+interface Objectif {
+  id: string;
+  label: string;
+  target: string;
+  progress: number;
+  status: "En cours" | "Atteint" | "Non atteint";
+}
+
+const initialObjectifs: Objectif[] = [
+  { id: "1", label: "Cash collecté mensuel", target: "10 000€", progress: 74, status: "En cours" },
+  { id: "2", label: "Nombre de closes", target: "10", progress: 60, status: "En cours" },
+  { id: "3", label: "Taux de closing", target: "35%", progress: 94, status: "Atteint" },
+];
+
+const statusStyle: Record<string, string> = {
+  "En cours": "bg-muted/30 text-muted-foreground",
+  "Atteint": "bg-primary/15 text-primary",
+  "Non atteint": "bg-destructive/15 text-destructive",
+};
+
+const statusIcon: Record<string, typeof CheckCircle2> = {
+  "En cours": Target,
+  "Atteint": CheckCircle2,
+  "Non atteint": AlertCircle,
+};
+
 const DashboardTab = () => {
+  const [objectifs, setObjectifs] = useState(initialObjectifs);
+  const [showObjModal, setShowObjModal] = useState(false);
+  const [newObj, setNewObj] = useState({ label: "", target: "" });
+
+  const addObjectif = () => {
+    if (!newObj.label.trim() || !newObj.target.trim() || objectifs.length >= 4) return;
+    setObjectifs([...objectifs, { id: String(Date.now()), label: newObj.label, target: newObj.target, progress: 0, status: "En cours" }]);
+    setNewObj({ label: "", target: "" });
+    setShowObjModal(false);
+  };
+
   return (
     <div className="space-y-3">
       {/* Section A — KPI Cards + Close Score */}
@@ -82,6 +120,69 @@ const DashboardTab = () => {
           </div>
         </div>
       </div>
+
+      {/* Section C — Objectifs mensuels */}
+      <div className="rounded-xl p-5 bg-card border border-border/50">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-semibold text-foreground">Mes objectifs du mois</h3>
+          {objectifs.length < 4 && (
+            <button onClick={() => setShowObjModal(true)} className="text-xs text-primary flex items-center gap-1 hover:underline">
+              <Plus size={14} /> Ajouter un objectif
+            </button>
+          )}
+          {objectifs.length >= 4 && (
+            <span className="text-[10px] text-muted-foreground">Maximum atteint (4/4)</span>
+          )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {objectifs.map((obj) => {
+            const Icon = statusIcon[obj.status];
+            return (
+              <div key={obj.id} className="bg-background border border-border/50 rounded-[10px] p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Icon size={14} className={obj.status === "Atteint" ? "text-primary" : obj.status === "Non atteint" ? "text-destructive" : "text-muted-foreground"} />
+                    <span className="text-sm font-medium">{obj.label}</span>
+                  </div>
+                  <span className={`text-[9px] font-medium px-2 py-0.5 rounded-full ${statusStyle[obj.status]}`}>{obj.status}</span>
+                </div>
+                <p className="text-lg font-bold text-primary mb-2">{obj.target}</p>
+                <div className="h-1.5 rounded-full bg-muted">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ${
+                      obj.status === "Atteint" ? "bg-primary" : obj.status === "Non atteint" ? "bg-destructive" : "bg-primary/60"
+                    }`}
+                    style={{ width: `${Math.min(obj.progress, 100)}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">{obj.progress}%</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Objectif modal */}
+      {showObjModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setShowObjModal(false)}>
+          <div className="absolute inset-0 bg-black/70" />
+          <div className="relative bg-card border border-border/50 rounded-2xl p-6 w-full max-w-[400px] mx-4 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setShowObjModal(false)} className="absolute top-4 right-4 w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground">×</button>
+            <h3 className="text-[15px] font-bold mb-4">Ajouter un objectif</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="text-[10px] text-muted-foreground block mb-1">Intitulé</label>
+                <input value={newObj.label} onChange={(e) => setNewObj({ ...newObj, label: e.target.value })} placeholder="Ex: Cash collecté mensuel" className="w-full h-10 rounded-lg border border-border/50 bg-background px-3 text-sm focus:outline-none focus:border-primary" />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted-foreground block mb-1">Valeur cible</label>
+                <input value={newObj.target} onChange={(e) => setNewObj({ ...newObj, target: e.target.value })} placeholder="Ex: 15 000€" className="w-full h-10 rounded-lg border border-border/50 bg-background px-3 text-sm focus:outline-none focus:border-primary" />
+              </div>
+              <button onClick={addObjectif} className="w-full h-10 rounded-[10px] bg-primary text-primary-foreground font-semibold text-sm">Ajouter</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
