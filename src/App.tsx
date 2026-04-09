@@ -9,14 +9,13 @@ import NotFound from "./pages/NotFound";
 import DashboardView from "./components/DashboardView";
 import DealsView from "./components/DealsView";
 import AddDeal from "./pages/AddDeal";
-import MapView from "./components/MapView";
-import GoalsView from "./components/GoalsView";
-import LeaderboardView from "./components/LeaderboardView";
-import RewardsView from "./components/RewardsView";
-import EcosystemsView from "./components/EcosystemsView";
+import ClientsView from "./pages/ClientsView";
+import ClientDetailView from "./pages/ClientDetailView";
+import ChallengeView from "./pages/ChallengeView";
+import StatsView from "./pages/StatsView";
+import ProfilView from "./pages/ProfilView";
+import TrackRecordView from "./pages/TrackRecordView";
 import SettingsView from "./pages/SettingsView";
-import ProfileView from "./pages/ProfileView";
-import ObjectifsView from "./pages/ObjectifsView";
 
 const queryClient = new QueryClient();
 
@@ -28,19 +27,18 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/track/:id" element={<TrackRecordView />} />
           <Route path="/" element={<Layout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardView />} />
+            <Route path="clients" element={<ClientsView />} />
+            <Route path="clients/:id" element={<ClientDetailView />} />
+            <Route path="challenges/:id" element={<ChallengeView />} />
             <Route path="deals" element={<DealsView />} />
             <Route path="deals/new" element={<AddDeal />} />
-            <Route path="map" element={<MapView />} />
-            <Route path="goals" element={<GoalsView />} />
-            <Route path="objectifs" element={<ObjectifsView />} />
-            <Route path="leaderboard" element={<LeaderboardView />} />
-            <Route path="rewards" element={<RewardsView />} />
-            <Route path="ecosystems" element={<EcosystemsView />} />
+            <Route path="stats" element={<StatsView />} />
+            <Route path="profil" element={<ProfilView />} />
             <Route path="settings" element={<SettingsView />} />
-            <Route path="profile" element={<ProfileView />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

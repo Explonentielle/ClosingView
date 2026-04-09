@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import DashboardTab from "./dashboard/DashboardTab";
 import KpiDailyHistoryTab from "./dashboard/KpiDailyHistoryTab";
 import KpiWeeklyTab from "./dashboard/KpiWeeklyTab";
@@ -10,7 +9,6 @@ const tabs = [
   { key: "dashboard", label: "Dashboard" },
   { key: "kpiDaily", label: "KPI Daily" },
   { key: "kpiWeekly", label: "KPI Weekly" },
-  { key: "objectifs", label: "Objectifs" },
 ] as const;
 
 type TabKey = (typeof tabs)[number]["key"];
@@ -19,25 +17,16 @@ const DashboardView = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const [showDailyModal, setShowDailyModal] = useState(false);
   const [showWeeklyModal, setShowWeeklyModal] = useState(false);
-  const navigate = useNavigate();
-
-  const handleTabClick = (key: TabKey) => {
-    if (key === "objectifs") {
-      navigate("/objectifs");
-    } else {
-      setActiveTab(key);
-    }
-  };
 
   return (
-    <div className="animate-slide-up max-w-[1440px] mx-auto space-y-4">
+    <div className="animate-fade-in max-w-[1440px] mx-auto space-y-4">
       {/* Tab bar + action buttons */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex gap-1 p-1">
           {tabs.map((t) => (
             <button
               key={t.key}
-              onClick={() => handleTabClick(t.key)}
+              onClick={() => setActiveTab(t.key)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === t.key
                   ? "bg-primary/15 text-primary border border-primary/25"
