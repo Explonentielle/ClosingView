@@ -1,102 +1,105 @@
-import { BarChart3, Briefcase, ChartNoAxesCombined, User, Settings, Zap, LogOut, Globe, Users } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LayoutGrid, Users, Activity, Globe, Lock, User } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
-const navItems = [
-  { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
-  { icon: Users, label: "Mes Clients", path: "/clients" },
-  { icon: Briefcase, label: "Deals", path: "/deals" },
-  { icon: ChartNoAxesCombined, label: "Stats", path: "/stats" },
-  { icon: User, label: "Profil", path: "/profil" },
-];
-
-const devItems = [
-  { icon: Globe, label: "Écosystèmes & Challenges" },
+const items = [
+  { to: "/dashboard", label: "Home",       Icon: LayoutGrid, locked: false },
+  { to: "/clients",   label: "Clients",    Icon: Users,      locked: false },
+  { to: "/stats",     label: "Stats",      Icon: Activity,   locked: false },
+  { to: "/network",   label: "Network",    Icon: Globe,      locked: false },
+  { to: "/ecosystem", label: "Écosystème", Icon: Lock,       locked: true  },
 ];
 
 const Sidebar = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
   return (
-    <aside className="w-16 lg:w-60 h-screen bg-card border-r border-border/50 flex flex-col py-5 shrink-0">
-      <div className="px-3 lg:px-5 mb-8">
-        <Link to="/dashboard" className="hidden lg:flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Zap size={16} className="text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight">
-              <span className="text-foreground">Close</span>
-              <span className="text-primary">One</span>
-            </h1>
-            <p className="text-[9px] text-muted-foreground -mt-0.5 tracking-wide">Growth Smarter.</p>
-          </div>
-        </Link>
-        <Link to="/dashboard" className="lg:hidden flex justify-center">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-            <Zap size={18} className="text-primary-foreground" />
-          </div>
-        </Link>
-      </div>
+    <aside
+      className="w-[58px] shrink-0 h-screen flex flex-col items-center py-3 border-hair border-r"
+      style={{ background: "#0a0f1a", borderColor: "#2a3a50" }}
+    >
+      {/* Logo hexagone vert */}
+      <NavLink to="/dashboard" className="mb-5">
+        <svg width="28" height="28" viewBox="0 0 28 28">
+          <polygon
+            points="14,2 25,8 25,20 14,26 3,20 3,8"
+            fill="none"
+            stroke="#0EFF9C"
+            strokeWidth="1.5"
+          />
+          <polygon
+            points="14,7 21,11 21,17 14,21 7,17 7,11"
+            fill="#0EFF9C"
+            fillOpacity="0.15"
+          />
+        </svg>
+      </NavLink>
 
-      <nav className="flex-1 space-y-0.5 px-2 lg:px-3 overflow-y-auto">
-        {navItems.map(({ icon: Icon, label, path }) => {
-          const isActive = location.pathname.startsWith(path);
-          return (
-            <Link
-              key={path}
-              to={path}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                isActive
-                  ? "bg-primary/10 text-primary border-l-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <Icon size={18} className="shrink-0" />
-              <span className="hidden lg:inline text-sm font-medium">{label}</span>
-            </Link>
-          );
-        })}
-
-        {/* Separator */}
-        <div className="!my-4 mx-2 border-t border-border/50" />
-
-        {/* En développement */}
-        <div className="hidden lg:block px-3 mb-2">
-          <span className="text-[10px] text-muted-foreground italic tracking-wide">En développement</span>
-        </div>
-        {devItems.map(({ icon: Icon, label }) => (
-          <div
-            key={label}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground opacity-40 cursor-not-allowed"
+      <nav className="flex-1 flex flex-col gap-1 w-full px-2">
+        {items.map(({ to, label, Icon, locked }) => (
+          <NavLink
+            key={to}
+            to={locked ? "#" : to}
+            onClick={(e) => locked && e.preventDefault()}
+            className={({ isActive }) =>
+              `flex flex-col items-center gap-1 py-2 rounded-[10px] border-hair transition-150 ${
+                locked ? "opacity-40 cursor-not-allowed border-transparent" : ""
+              } ${
+                !locked && isActive
+                  ? "border-[#0EFF9C55]"
+                  : "border-transparent hover:bg-white/[0.03]"
+              }`
+            }
+            style={({ isActive }: any) =>
+              !locked && isActive ? { background: "#0EFF9C18" } : undefined
+            }
           >
-            <Icon size={18} className="shrink-0" />
-            <span className="hidden lg:inline text-sm font-medium">{label}</span>
-            <span className="hidden lg:inline ml-auto text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-warning/20 text-warning">Bientôt</span>
-          </div>
+            {({ isActive }) => (
+              <>
+                <Icon
+                  size={16}
+                  color={!locked && isActive ? "#0EFF9C" : "#8892a0"}
+                  strokeWidth={1.8}
+                />
+                <span
+                  className="font-bold uppercase"
+                  style={{
+                    fontSize: "7px",
+                    letterSpacing: "0.5px",
+                    color: !locked && isActive ? "#0EFF9C" : "#8892a0",
+                  }}
+                >
+                  {label}
+                </span>
+              </>
+            )}
+          </NavLink>
         ))}
       </nav>
 
-      <div className="px-2 lg:px-3 space-y-0.5">
-        <Link
-          to="/settings"
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-            location.pathname === "/settings"
-              ? "bg-primary/10 text-primary border-l-2 border-primary"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-          }`}
-        >
-          <Settings size={18} className="shrink-0" />
-          <span className="hidden lg:inline text-sm font-medium">Paramètres</span>
-        </Link>
-        <button
-          onClick={() => navigate("/login")}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
-        >
-          <LogOut size={18} className="shrink-0" />
-          <span className="hidden lg:inline text-sm font-medium">Déconnexion</span>
-        </button>
-      </div>
+      {/* Profil bas */}
+      <NavLink
+        to="/profile"
+        className={({ isActive }) =>
+          `flex flex-col items-center gap-1 py-2 w-[42px] rounded-[10px] border-hair transition-150 ${
+            isActive ? "border-[#0EFF9C55]" : "border-transparent hover:bg-white/[0.03]"
+          }`
+        }
+        style={({ isActive }: any) => (isActive ? { background: "#0EFF9C18" } : undefined)}
+      >
+        {({ isActive }) => (
+          <>
+            <User size={16} color={isActive ? "#0EFF9C" : "#8892a0"} strokeWidth={1.8} />
+            <span
+              className="font-bold uppercase"
+              style={{
+                fontSize: "7px",
+                letterSpacing: "0.5px",
+                color: isActive ? "#0EFF9C" : "#8892a0",
+              }}
+            >
+              Profil
+            </span>
+          </>
+        )}
+      </NavLink>
     </aside>
   );
 };

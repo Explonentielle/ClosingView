@@ -1,34 +1,68 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
+import { useState } from "react";
 import Sidebar from "./Sidebar";
-import { Bell } from "lucide-react";
+import SaisirModal from "./modals/SaisirModal";
 
-const Layout = () => (
-  <div className="flex h-screen overflow-hidden">
-    <Sidebar />
-    <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Top Header Bar */}
-      <header className="h-14 border-b border-border/50 bg-card/60 backdrop-blur-md flex items-center justify-end px-6 shrink-0">
-        <div className="flex items-center gap-4">
-          <button className="relative text-muted-foreground hover:text-foreground transition-colors">
-            <Bell size={18} />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-destructive border-2 border-card" />
-          </button>
+const titleMap: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/clients":   "Mes clients",
+  "/stats":     "Statistiques",
+  "/network":   "Network",
+  "/ecosystem": "Écosystème",
+  "/profile":   "Profil",
+  "/settings":  "Paramètres",
+};
+
+const Layout = () => {
+  const { pathname } = useLocation();
+  const title = titleMap[pathname] ?? "Closing View";
+  const isDashboard = pathname.startsWith("/dashboard");
+  const [openSaisir, setOpenSaisir] = useState(false);
+
+  return (
+    <div className="flex h-screen overflow-hidden" style={{ background: "#0D1117" }}>
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header
+          className="h-[46px] border-hair flex items-center justify-between px-5 shrink-0"
+          style={{ background: "#0a0f1a", borderColor: "#2a3a50" }}
+        >
+          <h1 className="text-[13px] font-semibold tracking-wide text-white">{title}</h1>
+
           <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium leading-none">Julien De Bonnières</p>
-              <p className="text-[11px] text-muted-foreground">Senior Closer</p>
+            {isDashboard && (
+              <button
+                onClick={() => setOpenSaisir(true)}
+                className="h-[28px] px-3 rounded-[8px] text-[11px] font-bold tracking-wide transition-150"
+                style={{ background: "#0EFF9C", color: "#0D1117" }}
+              >
+                + Saisir
+              </button>
+            )}
+            <div
+              className="h-[24px] px-2.5 rounded-full border-hair text-[10px] font-bold flex items-center gap-1.5"
+              style={{ borderColor: "#0EFF9C55", color: "#0EFF9C", background: "#0EFF9C12" }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#0EFF9C" }} />
+              SCORE 74
             </div>
-            <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
-              JDB
+            <div
+              className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-[10px] font-bold"
+              style={{ background: "linear-gradient(135deg,#0EFF9C,#0a8d5e)", color: "#0D1117" }}
+            >
+              JD
             </div>
           </div>
-        </div>
-      </header>
-      <main className="flex-1 overflow-y-auto p-6 lg:p-8">
-        <Outlet />
-      </main>
+        </header>
+
+        <main className="flex-1 overflow-y-auto p-5 lg:p-6" style={{ background: "#0D1117" }}>
+          <Outlet />
+        </main>
+      </div>
+
+      <SaisirModal open={openSaisir} onClose={() => setOpenSaisir(false)} />
     </div>
-  </div>
-);
+  );
+};
 
 export default Layout;

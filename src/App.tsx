@@ -6,15 +6,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import DashboardView from "./components/DashboardView";
-import DealsView from "./components/DealsView";
-import AddDeal from "./pages/AddDeal";
-import ClientsView from "./pages/ClientsView";
-import ClientDetailView from "./pages/ClientDetailView";
-import ChallengeView from "./pages/ChallengeView";
-import StatsView from "./pages/StatsView";
-import ProfilView from "./pages/ProfilView";
-import TrackRecordView from "./pages/TrackRecordView";
+import Dashboard from "./pages/Dashboard";
+import Clients from "./pages/Clients";
+import Stats from "./pages/Stats";
+import Network from "./pages/Network";
+import Ecosystem from "./pages/Ecosystem";
+import Profile from "./pages/Profile";
 import SettingsView from "./pages/SettingsView";
 
 const queryClient = new QueryClient();
@@ -27,17 +24,14 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/track/:id" element={<TrackRecordView />} />
           <Route path="/" element={<Layout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardView />} />
-            <Route path="clients" element={<ClientsView />} />
-            <Route path="clients/:id" element={<ClientDetailView />} />
-            <Route path="challenges/:id" element={<ChallengeView />} />
-            <Route path="deals" element={<DealsView />} />
-            <Route path="deals/new" element={<AddDeal />} />
-            <Route path="stats" element={<StatsView />} />
-            <Route path="profil" element={<ProfilView />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="clients" element={<Clients />} />
+            <Route path="stats" element={<Stats />} />
+            <Route path="network" element={<Network />} />
+            <Route path="ecosystem" element={<Ecosystem />} />
+            <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<SettingsView />} />
           </Route>
           <Route path="*" element={<NotFound />} />
