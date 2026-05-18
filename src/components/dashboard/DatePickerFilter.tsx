@@ -72,11 +72,15 @@ export default function DatePickerFilter({ onRangeSelect }: Props) {
               caption: { color: "white", marginBottom: 8 },
               head_cell: { color: "#6b7a99", fontSize: 10, fontWeight: 700 },
               day: { color: "white", borderRadius: 6 },
-              day_selected: { background: "#0EFF9C", color: "#0D1117", fontWeight: 700 },
-              day_range_middle: { background: "#0EFF9C22", color: "#0EFF9C" },
-              day_today: { border: "0.5px solid #0EFF9C44", color: "#0EFF9C" },
-              day_outside: { color: "#3a4a5a" },
               nav_button: { color: "#8892a0", background: "transparent" },
+            } as never}
+            modifiersStyles={{
+              selected: { background: "#0EFF9C", color: "#0D1117", fontWeight: 700 },
+              range_start: { background: "#0EFF9C", color: "#0D1117", fontWeight: 700 },
+              range_end: { background: "#0EFF9C", color: "#0D1117", fontWeight: 700 },
+              range_middle: { background: "#0EFF9C22", color: "#0EFF9C" },
+              today: { border: "0.5px solid #0EFF9C44", color: "#0EFF9C" },
+              outside: { color: "#3a4a5a" },
             }}
           />
           {range?.from && range?.to && (
