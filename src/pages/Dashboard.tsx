@@ -1,15 +1,18 @@
 import { useState, useMemo } from "react";
-import { Calendar } from "lucide-react";
+import { DateRange } from "react-day-picker";
 import KpiCard from "@/components/dashboard/KpiCard";
 import ObjectiveBar from "@/components/dashboard/ObjectiveBar";
 import InteractiveChart from "@/components/dashboard/InteractiveChart";
+import DatePickerFilter from "@/components/dashboard/DatePickerFilter";
 import { Range, statsData, closingRateData, commissionsData, monthLabels, objectives } from "@/data/mocks";
 
 const RANGES: Range[] = ["7j", "30j", "3m", "1a"];
 
 const Dashboard = () => {
   const [range, setRange] = useState<Range>("30j");
-  const d = statsData[range];
+  const [customRange, setCustomRange] = useState<DateRange | undefined>();
+  const isCustom = !!(customRange?.from && customRange?.to);
+  const d = statsData[isCustom ? "30j" : range];
 
   const commAvg = useMemo(() => Math.round(commissionsData.reduce((s, v) => s + v, 0) / commissionsData.length), []);
   const trendComm = 18;
@@ -18,28 +21,26 @@ const Dashboard = () => {
     <div className="animate-fade-in space-y-5 max-w-[1280px]">
       {/* Filtres temporels */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex border-hair rounded-[10px] overflow-hidden" style={{ borderColor: "#2a3a50" }}>
+        <div
+          className="flex border-hair rounded-[10px] overflow-hidden"
+          style={{ borderColor: "#2a3a50", opacity: isCustom ? 0.4 : 1 }}
+        >
           {RANGES.map((r) => (
             <button
               key={r}
-              onClick={() => setRange(r)}
+              onClick={() => !isCustom && setRange(r)}
               className="px-3.5 h-8 text-[11px] font-bold transition-150"
               style={{
-                background: range === r ? "#0EFF9C" : "transparent",
-                color: range === r ? "#0D1117" : "#8892a0",
+                background: !isCustom && range === r ? "#0EFF9C" : "transparent",
+                color: !isCustom && range === r ? "#0D1117" : "#8892a0",
+                cursor: isCustom ? "not-allowed" : "pointer",
               }}
             >
               {r}
             </button>
           ))}
-          <button
-            className="px-2.5 h-8 flex items-center justify-center border-l-[0.5px]"
-            style={{ borderColor: "#2a3a50", color: "#8892a0" }}
-            title="Date personnalisée"
-          >
-            <Calendar size={13} />
-          </button>
         </div>
+        <DatePickerFilter onRangeSelect={setCustomRange} />
       </div>
 
       {/* 4 KPI */}
