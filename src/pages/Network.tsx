@@ -1,41 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Send } from "lucide-react";
-import { closers, mapClosers } from "@/data/mocks";
+import { closers } from "@/data/mocks";
+import MapFrance from "@/components/network/MapFrance";
 
 type Msg = { from: "me" | "them"; text: string; ts: number };
-
-const MapFrance = () => (
-  <div className="rounded-[12px] border-hair p-4 relative" style={{ background: "#161d2e", borderColor: "#2a3a50" }}>
-    <div className="absolute top-3 right-3 flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-full"
-      style={{ background: "#0EFF9C18", color: "#0EFF9C" }}>
-      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#0EFF9C" }} />
-      127 closers actifs
-    </div>
-
-    <svg viewBox="0 0 380 320" className="w-full h-[280px]">
-      {/* France schématique */}
-      <path
-        d="M 130 35 L 200 25 L 250 50 L 290 80 L 305 130 L 295 180 L 280 230 L 240 270 L 180 280 L 130 265 L 90 220 L 75 170 L 85 110 L 110 60 Z"
-        fill="#0EFF9C08" stroke="#2a3a50" strokeWidth="0.8"
-      />
-      {mapClosers.map((c, i) => (
-        <g key={i}>
-          <circle cx={c.cx} cy={c.cy} r="14" fill={c.color} fillOpacity="0.15" />
-          <circle cx={c.cx} cy={c.cy} r="9"  fill={c.color} />
-          <text x={c.cx} y={c.cy + 3} textAnchor="middle" fontSize="9" fontWeight="800" fill="#0D1117">
-            {c.score}
-          </text>
-        </g>
-      ))}
-    </svg>
-
-    <div className="flex items-center gap-4 text-[10px] mt-2" style={{ color: "#8892a0" }}>
-      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: "#0EFF9C" }} /> 70+</span>
-      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: "#EFB027" }} /> 50–69</span>
-      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: "#3B82F6" }} /> &lt;50</span>
-    </div>
-  </div>
-);
 
 const ArenaChat = () => {
   const onlineClosers = closers.filter((c) => c.online);
