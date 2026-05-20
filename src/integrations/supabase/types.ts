@@ -14,7 +14,334 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          initials: string
+          name: string
+          niche: string
+          total_amount: number | null
+          type: string[] | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          initials: string
+          name: string
+          niche: string
+          total_amount?: number | null
+          type?: string[] | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          initials?: string
+          name?: string
+          niche?: string
+          total_amount?: number | null
+          type?: string[] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      closes: {
+        Row: {
+          client_id: string | null
+          close_date: string | null
+          closed_at_round: string | null
+          collected_amount: number
+          contracted_amount: number
+          created_at: string | null
+          entry_id: string | null
+          id: string
+          installments: number | null
+          offer_id: string | null
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          close_date?: string | null
+          closed_at_round?: string | null
+          collected_amount: number
+          contracted_amount: number
+          created_at?: string | null
+          entry_id?: string | null
+          id?: string
+          installments?: number | null
+          offer_id?: string | null
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          close_date?: string | null
+          closed_at_round?: string | null
+          collected_amount?: number
+          contracted_amount?: number
+          created_at?: string | null
+          entry_id?: string | null
+          id?: string
+          installments?: number | null
+          offer_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "closes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "closes_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "daily_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "closes_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "closes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_entries: {
+        Row: {
+          client_id: string | null
+          closes_count: number | null
+          created_at: string | null
+          entry_date: string
+          id: string
+          r1_done: number | null
+          r1_planned: number | null
+          r2_done: number | null
+          r2_planned: number | null
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          closes_count?: number | null
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          r1_done?: number | null
+          r1_planned?: number | null
+          r2_done?: number | null
+          r2_planned?: number | null
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          closes_count?: number | null
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          r1_done?: number | null
+          r1_planned?: number | null
+          r2_done?: number | null
+          r2_planned?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_entries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offers: {
+        Row: {
+          amount: number
+          client_id: string
+          created_at: string | null
+          id: string
+          max_installments: number | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          client_id: string
+          created_at?: string | null
+          id?: string
+          max_installments?: number | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          max_installments?: number | null
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          city: string | null
+          close_score: number | null
+          created_at: string | null
+          email: string
+          experience_years: number | null
+          first_name: string
+          id: string
+          is_premium: boolean | null
+          last_name: string
+          phone: string | null
+          premium_until: string | null
+          region: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          city?: string | null
+          close_score?: number | null
+          created_at?: string | null
+          email: string
+          experience_years?: number | null
+          first_name?: string
+          id: string
+          is_premium?: boolean | null
+          last_name?: string
+          phone?: string | null
+          premium_until?: string | null
+          region?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string | null
+          close_score?: number | null
+          created_at?: string | null
+          email?: string
+          experience_years?: number | null
+          first_name?: string
+          id?: string
+          is_premium?: boolean | null
+          last_name?: string
+          phone?: string | null
+          premium_until?: string | null
+          region?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      waitlist: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
