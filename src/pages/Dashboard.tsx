@@ -4,6 +4,7 @@ import KpiCard from "@/components/dashboard/KpiCard";
 import ObjectiveBar from "@/components/dashboard/ObjectiveBar";
 import InteractiveChart from "@/components/dashboard/InteractiveChart";
 import DatePickerFilter from "@/components/dashboard/DatePickerFilter";
+import StreakBanner from "@/components/dashboard/StreakBanner";
 import { Range, statsData, closingRateData, commissionsData, monthLabels, objectives } from "@/data/mocks";
 
 const RANGES: Range[] = ["7j", "30j", "3m", "1a"];
@@ -19,6 +20,8 @@ const Dashboard = () => {
 
   return (
     <div className="animate-fade-in space-y-5 max-w-[1280px]">
+      <StreakBanner />
+
       {/* Filtres temporels */}
       <div className="flex items-center gap-2 flex-wrap">
         <div
