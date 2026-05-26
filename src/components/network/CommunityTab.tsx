@@ -127,8 +127,6 @@ const CommunityTab = () => {
     if (cur?.mine) {
       await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", user.id);
     } else {
-      await supabase.from("post_likes").insert({ post_id: user ? { post_id: postId, user_id: user.id } as any : null } as any);
-      // simpler:
       await supabase.from("post_likes").insert({ post_id: postId, user_id: user.id });
     }
   };
