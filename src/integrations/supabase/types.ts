@@ -129,6 +129,36 @@ export type Database = {
           },
         ]
       }
+      community_posts: {
+        Row: {
+          cash: number | null
+          closes: number | null
+          content: string
+          created_at: string
+          id: string
+          taux: number | null
+          user_id: string
+        }
+        Insert: {
+          cash?: number | null
+          closes?: number | null
+          content: string
+          created_at?: string
+          id?: string
+          taux?: number | null
+          user_id: string
+        }
+        Update: {
+          cash?: number | null
+          closes?: number | null
+          content?: string
+          created_at?: string
+          id?: string
+          taux?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_entries: {
         Row: {
           client_id: string | null
@@ -270,20 +300,54 @@ export type Database = {
           },
         ]
       }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           city: string | null
           close_score: number | null
           created_at: string | null
+          display_name: string | null
           email: string
           experience_years: number | null
           first_name: string
           id: string
+          is_online: boolean | null
           is_premium: boolean | null
           last_name: string
+          last_seen: string | null
+          niche: string | null
           phone: string | null
           premium_until: string | null
           region: string | null
+          streak: number | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           updated_at: string | null
@@ -292,15 +356,20 @@ export type Database = {
           city?: string | null
           close_score?: number | null
           created_at?: string | null
+          display_name?: string | null
           email: string
           experience_years?: number | null
           first_name?: string
           id: string
+          is_online?: boolean | null
           is_premium?: boolean | null
           last_name?: string
+          last_seen?: string | null
+          niche?: string | null
           phone?: string | null
           premium_until?: string | null
           region?: string | null
+          streak?: number | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string | null
@@ -309,15 +378,20 @@ export type Database = {
           city?: string | null
           close_score?: number | null
           created_at?: string | null
+          display_name?: string | null
           email?: string
           experience_years?: number | null
           first_name?: string
           id?: string
+          is_online?: boolean | null
           is_premium?: boolean | null
           last_name?: string
+          last_seen?: string | null
+          niche?: string | null
           phone?: string | null
           premium_until?: string | null
           region?: string | null
+          streak?: number | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string | null
@@ -347,7 +421,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_leaderboard: {
+        Args: { period?: string }
+        Returns: {
+          assiduite: number
+          city: string
+          close_score: number
+          display_name: string
+          first_name: string
+          id: string
+          last_name: string
+          leaderboard_score: number
+          streak: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
