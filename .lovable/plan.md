@@ -1,53 +1,58 @@
-# Plan — Closing View front-end complet
+## Sprint: Streak dynamique + Refonte Réseau + Messagerie privée
 
-Le projet est en **Vite + React + TypeScript + Tailwind** (pas Next.js). Je conserve cette stack — les routes seront gérées par `react-router-dom` déjà en place, équivalent fonctionnel à `/app/*`. Tout le reste de la spec (design system, comportements, données mockées) est respecté à la lettre.
+### Scope strict
+Touche uniquement: Dashboard (bannière streak), page Network (refonte complète 4 sous-onglets), Layout (monte la messagerie globale), nouveaux composants/fichiers. Aucune modif sur Clients, Stats, Ecosystem, Profile, Sidebar, design tokens.
 
-## 1. Design system & layout
+### Étape 1 — Migration Supabase
+Une seule migration ajoutant:
+- `community_posts` (user_id, content, closes, cash, taux, created_at) + RLS lecture publique authentifiée, insert/update/delete owner only, GRANTs
+- `post_likes` (post_id, user_id unique) + RLS lecture publique auth, insert/delete owner, GRANTs
+- Ajouts colonnes `profiles`: `display_name text`, `city text` (déjà), `niche text`, `streak int default 0`, `is_online bool default false`, `last_seen timestamptz`. Étendre policy `profiles` pour autoriser SELECT public authentifié (nécessaire pour Network/Leaderboard/Map)
+- Renommer/aligner `messages.recipient_id`: la table existante utilise `receiver_id` et `is_read`. Garder les noms actuels côté DB; adapter le code. Realtime déjà actif sur `messages`.
+- RPC `get_leaderboard(period text)` retournant top closers avec `close_score*0.7 + assiduité*0.3`
 
-- Étendre `src/index.css` + `tailwind.config.ts` avec les tokens exacts : `bg #0D1117`, `sidebar #0a0f1a`, `card #161d2e`, `border #2a3a50`, accents `#0EFF9C / #EFB027 / #F87171 / #3B82F6 / #9B7FE8`, muted `#6b7a99`.
-- Refonte `Sidebar.tsx` : largeur **58px fixe**, logo hexagone vert, 6 items (Home, Clients, Stats, Network, Écosystème [cadenas], Profil en bas), labels 7px / 700 / letter-spacing 0.5, état actif `bg #0EFF9C18 + border #0EFF9C55`.
-- Refonte `Layout.tsx` topbar **46px** : titre page dynamique + badge "Score 74" vert + avatar JD + bouton **Saisir** (visible sur Dashboard).
-- Données mockées centralisées dans `src/data/mocks.ts`.
+### Étape 2 — Frontend
+**Dashboard** — Identifier la bannière streak (lecture fichier) puis remplacer son contenu par un hook `useStreak()` qui:
+- Query `daily_entries` user, distinct dates DESC
+- Compte jours consécutifs depuis aujourd'hui (ou hier si pas d'entrée aujourd'hui)
+- Si 0 → return null (masque la bannière); sinon rend `🔥 {N} jours consécutifs — Top 20% !`
 
-## 2. Pages
+**Network refonte** — Réécrire `src/pages/Network.tsx`:
+- Tabs Community / Members / Leaderboard / Map + indicateur "X en ligne" (count profils `is_online`)
+- 4 composants enfants dans `src/components/network/`:
+  - `CommunityTab.tsx` — feed + composer (280 chars) + sidebar (profil user, top closers, online list)
+  - `MembersTab.tsx` — search + filter pills (En ligne/Tous) + grille 3 colonnes, bouton Msg ouvre messagerie
+  - `LeaderboardTab.tsx` — 3 colonnes 7d/30d/all via RPC
+  - `MapTab.tsx` — réutilise/upgrade `MapFrance.tsx` existant avec points depuis `profiles` + tooltip + légende
+- Style tabs: bordure bottom `#0EFF9C` actif, `#1a2232` barre
 
-```text
-/dashboard  → filtres 7j/30j/3m/1an + 4 KPI + 3 objectifs + 2 charts SVG interactifs
-/clients    → liste 2 clients + card placeholder + modale création (toggle VSL/Challenge, offres dynamiques)
-/stats      → filtres Global/Niche/… + 4 KPI + jauge demi-cercle Full/Split + radar Close Score 74 + 3 taux + résumé + bouton PDF
-/network    → sous-tabs Carte / Arena ; Carte France SVG ; Arena = stats premium + messagerie 2 colonnes avec réponse simulée 1.2s
-/ecosystem  → hero waitlist + 2 cards teasées (blur + cadenas)
-/profile    → hero card + 3 boutons d'action
-```
+**Messagerie privée globale** — Nouveau composant `src/components/messaging/PrivateMessaging.tsx` monté dans `Layout.tsx`:
+- Context `MessagingContext` exposant `openConversation(userId)` pour le bouton Msg de Members
+- 3 vues: bulle FAB + badge non lus, panel conversations groupées, vue conversation avec input
+- Realtime channel `messages` filtre `receiver_id=eq.{me}` + invalidation
+- `useMessages` hook: liste conversations (groupées par autre user), markAsRead à l'ouverture
+- Utilise colonnes existantes `sender_id`, `receiver_id`, `is_read`, `content`
 
-## 3. Composants à créer
+### Détails techniques
+- Streak: query `daily_entries.entry_date` distinct, boucle pour compter consécutifs (tolère: démarre à `today` ou `today-1`)
+- Online status: considérer `is_online=true` OR `last_seen > now()-5min`
+- Likes count: agrégation côté client (fetch post_likes par batch)
+- Toutes les couleurs en inline style ou via design tokens existants — pas de nouveaux tokens
 
-- `components/dashboard/KpiCard`, `ObjectiveBar`, `ChartClosing`, `ChartCommissions` (SVG smooth curve + hover halo = 4 cercles concentriques fill-opacity 0.04/0.07/0.12/0.25, **sans feGaussianBlur**, segment blanc, badge dynamique).
-- `components/modals/SaisirModal` (3 étapes), `ClientModal`.
-- `components/stats/CloseScoreRadar` (pentagone SVG, score 74 glow), `GaugeChart` (demi-cercle viewBox `4 0 152 70`).
-- `components/network/MapFrance`, `CloserList`, `ArenaChat`.
-- `components/ecosystem/HeroTeaser`, `TeaserCard`, `WaitlistForm`.
-- `components/profile/HeroCard`.
+### Fichiers
+**Créés:**
+- `src/hooks/useStreak.ts`
+- `src/hooks/useMessaging.tsx` (context + provider)
+- `src/components/messaging/PrivateMessaging.tsx`
+- `src/components/network/CommunityTab.tsx`
+- `src/components/network/MembersTab.tsx`
+- `src/components/network/LeaderboardTab.tsx`
+- `src/components/network/MapTab.tsx`
 
-## 4. Comportements
+**Modifiés:**
+- `src/pages/Dashboard.tsx` (bannière uniquement)
+- `src/pages/Network.tsx` (réécriture)
+- `src/components/Layout.tsx` (monter `<MessagingProvider>` + `<PrivateMessaging />`)
 
-- Filtres dashboard recalculent KPI depuis `statsData`.
-- Hover charts : ligne verticale + halo blanc + segment + badge mis à jour.
-- Modale Saisir : étape 2 conditionnelle si closes>0 ; étape succès avec check animé.
-- Arena : clic closer → conversation ; Entrée envoie ; réponse auto 1.2s si online ; conversation Alexandre L. pré-chargée.
-- Waitlist : submit valide → banner succès + compteur 147→148.
-- Transitions 150ms ease partout.
-
-## 5. Nettoyage
-
-Suppression des pages obsolètes hors scope nouveau : `KpiDailyHistoryTab`, `KpiWeeklyTab`, `KpiDailyModal`, `KpiWeeklyModal`, `ChallengeView`, `ClientDetailView`, `ObjectifsView`, `TrackRecordView`, `ClimbView`, `GoalsView`, `RewardsView`, `LeaderboardView`, `EcosystemsView` (remplacé), `MapView`, `CloserBadge`, `DealsView`, `AddDeal`, `ProfileView` (doublon).
-
-## Détails techniques
-
-- Routes React Router : `/dashboard`, `/clients`, `/stats`, `/network`, `/ecosystem`, `/profile` (+ `/login`, `/settings` conservés). Redirect `/` → `/dashboard`.
-- Tokens HSL dans `index.css`, classes Tailwind sémantiques (`bg-card`, `text-primary`, etc.). Couleurs accent exposées comme `--accent-green`, `--accent-yellow`, `--accent-blue`, `--accent-violet`, `--accent-red`.
-- Charts : path SVG via interpolation Catmull-Rom→Bezier, gradient `<linearGradient>` sous la courbe.
-- État local React (useState) pour filtres, modales, chat, waitlist — pas de store global.
-- Pas de backend / Supabase / auth dans ce prompt.
-
-Une fois validé, j'exécute toute la refonte en une passe.
+### Hors scope (confirmé)
+Clients, Stats, Ecosystem, Profile, Sidebar, tokens — pas touché.
