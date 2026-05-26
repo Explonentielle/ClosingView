@@ -60,7 +60,7 @@ const CommunityTab = () => {
     const arr = (ps as any) ?? [];
     setPosts(arr);
 
-    const uids = Array.from(new Set(arr.map((p: Post) => p.user_id)));
+    const uids = Array.from(new Set(arr.map((p: Post) => p.user_id))) as string[];
     if (uids.length) {
       const { data: profs } = await supabase
         .from("profiles")
