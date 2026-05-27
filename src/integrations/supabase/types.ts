@@ -344,6 +344,7 @@ export type Database = {
           last_name: string
           last_seen: string | null
           niche: string | null
+          onboarding_done: boolean
           phone: string | null
           premium_until: string | null
           region: string | null
@@ -366,6 +367,7 @@ export type Database = {
           last_name?: string
           last_seen?: string | null
           niche?: string | null
+          onboarding_done?: boolean
           phone?: string | null
           premium_until?: string | null
           region?: string | null
@@ -388,6 +390,7 @@ export type Database = {
           last_name?: string
           last_seen?: string | null
           niche?: string | null
+          onboarding_done?: boolean
           phone?: string | null
           premium_until?: string | null
           region?: string | null
