@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import SaisirModal from "./modals/SaisirModal";
 import { MessagingProvider } from "@/hooks/useMessaging";
 import PrivateMessaging from "@/components/messaging/PrivateMessaging";
+import OnboardingFlow from "@/components/OnboardingFlow";
 
 const titleMap: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -65,6 +66,7 @@ const Layout = () => {
 
         <SaisirModal open={openSaisir} onClose={() => setOpenSaisir(false)} />
         <PrivateMessaging />
+        <OnboardingFlow />
       </div>
     </MessagingProvider>
   );
