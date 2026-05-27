@@ -5,7 +5,7 @@ const items = [
   { to: "/dashboard", label: "Home",       Icon: LayoutGrid, locked: false },
   { to: "/clients",   label: "Clients",    Icon: Users,      locked: false },
   { to: "/stats",     label: "Stats",      Icon: Activity,   locked: false },
-  { to: "/network",   label: "Network",    Icon: Globe,      locked: false },
+  { to: "/network",   label: "Réseau",     Icon: Globe,      locked: false },
   { to: "/ecosystem", label: "Écosystème", Icon: Lock,       locked: true  },
 ];
 

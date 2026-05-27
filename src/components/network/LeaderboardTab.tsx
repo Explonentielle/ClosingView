@@ -7,6 +7,7 @@ type Row = {
   display_name: string | null;
   first_name: string | null;
   last_name: string | null;
+  email?: string | null;
   city: string | null;
   close_score: number;
   streak: number;
@@ -14,10 +15,18 @@ type Row = {
   leaderboard_score: number;
 };
 
-const fullName = (p: Row) =>
-  p.display_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Closer";
-const initials = (p: Row) =>
-  fullName(p).split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+const fullName = (p: Row) => {
+  const explicit = p.display_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim();
+  if (explicit) return explicit;
+  if (p.email) return p.email.split("@")[0];
+  return "Closer";
+};
+const initials = (p: Row) => {
+  if (p.display_name || p.first_name || p.last_name)
+    return fullName(p).split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+  if (p.email) return p.email.split("@")[0].slice(0, 2).toUpperCase();
+  return "??";
+};
 
 const Column = ({ title, period }: { title: string; period: "7d" | "30d" | "all" }) => {
   const { user } = useAuth();

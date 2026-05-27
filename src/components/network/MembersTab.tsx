@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 type Profile = {
   id: string;
+  email?: string | null;
   first_name?: string | null;
   last_name?: string | null;
   display_name?: string | null;
@@ -17,12 +18,21 @@ type Profile = {
   last_seen?: string | null;
 };
 
-const fullName = (p: Profile) =>
-  p.display_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Closer";
-const initials = (p: Profile) =>
-  fullName(p).split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+const fullName = (p: Profile) => {
+  const explicit = p.display_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim();
+  if (explicit) return explicit;
+  if (p.email) return p.email.split("@")[0];
+  return "Closer";
+};
+const initials = (p: Profile) => {
+  if (p.display_name || p.first_name || p.last_name) {
+    return fullName(p).split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+  }
+  if (p.email) return p.email.split("@")[0].slice(0, 2).toUpperCase();
+  return "??";
+};
 const isOnline = (p: Profile) =>
-  !!p.is_online || (!!p.last_seen && Date.now() - new Date(p.last_seen).getTime() < 5 * 60 * 1000);
+  !!p.last_seen && Date.now() - new Date(p.last_seen).getTime() < 5 * 60 * 1000;
 
 const MembersTab = () => {
   const { user } = useAuth();
@@ -34,7 +44,7 @@ const MembersTab = () => {
   useEffect(() => {
     supabase
       .from("profiles")
-      .select("id, first_name, last_name, display_name, city, niche, close_score, streak, is_online, last_seen")
+      .select("id, email, first_name, last_name, display_name, city, niche, close_score, streak, is_online, last_seen")
       .order("close_score", { ascending: false, nullsFirst: false })
       .limit(120)
       .then(({ data }) => setMembers(((data as any) ?? []).filter((p: Profile) => p.id !== user?.id)));

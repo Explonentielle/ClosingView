@@ -9,7 +9,7 @@ const titleMap: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/clients":   "Mes clients",
   "/stats":     "Statistiques",
-  "/network":   "Network",
+  "/network":   "Réseau",
   "/ecosystem": "Écosystème",
   "/profile":   "Profil",
   "/settings":  "Paramètres",

@@ -22,9 +22,9 @@ const Network = () => {
     const fiveAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     supabase
       .from("profiles")
-      .select("id, is_online, last_seen")
-      .or(`is_online.eq.true,last_seen.gte.${fiveAgo}`)
-      .then(({ data }) => setOnlineCount((data ?? []).length));
+      .select("id", { count: "exact", head: true })
+      .gte("last_seen", fiveAgo)
+      .then(({ count }) => setOnlineCount(count ?? 0));
   }, [tab]);
 
   return (
