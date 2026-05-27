@@ -66,6 +66,7 @@ const Layout = () => {
 
         <SaisirModal open={openSaisir} onClose={() => setOpenSaisir(false)} />
         <PrivateMessaging />
+        <OnboardingFlow />
       </div>
     </MessagingProvider>
   );
