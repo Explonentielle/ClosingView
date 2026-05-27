@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 type Profile = {
   id: string;
+  email?: string | null;
   first_name?: string | null;
   last_name?: string | null;
   display_name?: string | null;
@@ -26,11 +27,21 @@ type Post = {
   created_at: string;
 };
 
-const fullName = (p?: Profile) =>
-  p?.display_name || `${p?.first_name ?? ""} ${p?.last_name ?? ""}`.trim() || "Closer";
+const fullName = (p?: Profile) => {
+  const explicit = p?.display_name || `${p?.first_name ?? ""} ${p?.last_name ?? ""}`.trim();
+  if (explicit) return explicit;
+  if (p?.email) return p.email.split("@")[0];
+  return "Closer";
+};
 const initials = (p?: Profile) => {
-  const n = fullName(p);
-  return n.split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+  if (p?.display_name || p?.first_name || p?.last_name) {
+    return fullName(p).split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+  }
+  if (p?.email) {
+    const local = p.email.split("@")[0];
+    return local.slice(0, 2).toUpperCase();
+  }
+  return "??";
 };
 const timeAgo = (iso: string) => {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -40,7 +51,7 @@ const timeAgo = (iso: string) => {
   return `${Math.floor(diff / 86400)}j`;
 };
 const isOnline = (p?: Profile) =>
-  !!p?.is_online || (!!p?.last_seen && Date.now() - new Date(p.last_seen).getTime() < 5 * 60 * 1000);
+  !!p?.last_seen && Date.now() - new Date(p.last_seen).getTime() < 5 * 60 * 1000;
 
 const CommunityTab = () => {
   const { user } = useAuth();
@@ -64,7 +75,7 @@ const CommunityTab = () => {
     if (uids.length) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, display_name, city, niche, close_score, streak, is_online, last_seen")
+        .select("id, email, first_name, last_name, display_name, city, niche, close_score, streak, is_online, last_seen")
         .in("id", uids);
       const m: Record<string, Profile> = {};
       (profs ?? []).forEach((p: any) => { m[p.id] = p; });
@@ -93,13 +104,13 @@ const CommunityTab = () => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("id, first_name, last_name, display_name, city, niche, close_score, streak")
+      .select("id, email, first_name, last_name, display_name, city, niche, close_score, streak")
       .eq("id", user.id)
       .single()
       .then(({ data }) => setMe(data as any));
     supabase
       .from("profiles")
-      .select("id, first_name, last_name, display_name, city, close_score, streak, is_online, last_seen")
+      .select("id, email, first_name, last_name, display_name, city, close_score, streak, is_online, last_seen")
       .order("close_score", { ascending: false, nullsFirst: false })
       .limit(8)
       .then(({ data }) => setTopClosers((data as any) ?? []));
@@ -245,8 +256,8 @@ const CommunityTab = () => {
         <div className="rounded-[10px] border-hair p-3" style={{ background: "#161d2e", borderColor: "#2a3a50" }}>
           <div className="text-[10px] uppercase font-bold mb-2" style={{ color: "#8892a0" }}>Top closers</div>
           <div className="space-y-1.5">
-            {topClosers.slice(0, 3).map((c, i) => (
-              <Row key={c.id} medal={["🥇","🥈","🥉"][i]} p={c} />
+            {topClosers.slice(0, 5).map((c, i) => (
+              <Row key={c.id} medal={i < 3 ? ["🥇","🥈","🥉"][i] : `#${i + 1}`} p={c} />
             ))}
             {me && (
               <>
