@@ -111,3 +111,23 @@
 
 /* Transition globale demandée */
 button, a, [role="button"], .transition-150 { transition: all 150ms ease; }
+
+@media print {
+  body > *:not(#track-record-modal-overlay) { display: none !important; }
+  #track-record-modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .track-record-modal {
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+  .track-record-actions { display: none !important; }
+  .track-record-table, .track-record-radar { page-break-inside: avoid; }
+}
