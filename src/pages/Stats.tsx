@@ -84,8 +84,16 @@ const Radar = () => {
   );
 };
 
+import TrackRecordModal from "@/components/stats/TrackRecordModal";
+
 const Stats = () => {
   const [filter, setFilter] = useState("Global");
+  const [trackOpen, setTrackOpen] = useState(false);
+  const rates = {
+    noShow: { v: 12, x: 3, y: 24 },
+    followUp: { v: 17, deals: 4 },
+    closing: { v: 29, x: 7, y: 24 },
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%", overflow: "hidden", padding: "12px 14px" }}>
@@ -187,7 +195,7 @@ const Stats = () => {
 
       {/* Section 5 — bouton */}
       <div style={{ flexShrink: 0 }}>
-        <button style={{ width: "100%", padding: 10, background: "#0EFF9C", color: "#0D1117", border: "none", borderRadius: 9, fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: "Inter, sans-serif", height: 40 }}>
+        <button onClick={() => setTrackOpen(true)} style={{ width: "100%", padding: 10, background: "#0EFF9C", color: "#0D1117", border: "none", borderRadius: 9, fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: "Inter, sans-serif", height: 40 }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0D1117" strokeWidth={2.5}>
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="7 10 12 15 17 10" />
@@ -196,6 +204,7 @@ const Stats = () => {
           Générer mon Track Record (PDF)
         </button>
       </div>
+      <TrackRecordModal open={trackOpen} onClose={() => setTrackOpen(false)} rates={rates} />
     </div>
   );
 };
