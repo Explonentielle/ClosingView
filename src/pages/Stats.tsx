@@ -84,8 +84,16 @@ const Radar = () => {
   );
 };
 
+import TrackRecordModal from "@/components/stats/TrackRecordModal";
+
 const Stats = () => {
   const [filter, setFilter] = useState("Global");
+  const [trackOpen, setTrackOpen] = useState(false);
+  const rates = {
+    noShow: { v: 12, x: 3, y: 24 },
+    followUp: { v: 17, deals: 4 },
+    closing: { v: 29, x: 7, y: 24 },
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%", overflow: "hidden", padding: "12px 14px" }}>
