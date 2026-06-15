@@ -2,9 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -27,11 +25,11 @@ const Login = () => {
   };
 
   const google = async () => {
-    setErr(null);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (result.error) { setErr((result.error as Error).message || "Erreur Google"); return; }
-    if (result.redirected) return;
-    navigate("/dashboard", { replace: true });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) setErr(error.message);
   };
 
   return (

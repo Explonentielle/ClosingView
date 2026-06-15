@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/useAuth";
 
 const strength = (p: string) => {
@@ -51,8 +50,11 @@ const Register = () => {
   };
 
   const google = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (result.error) setErr((result.error as Error).message);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
+    });
+    if (error) setErr(error.message);
   };
 
   if (done) {
@@ -158,7 +160,7 @@ const Register = () => {
         <Link to="/login" className="mt-5 block text-center text-[11px] font-semibold" style={{ color: "#0EFF9C" }}>
           Déjà un compte ? Se connecter →
         </Link>
-      </div>
+        </div>
     </div>
   );
 };
