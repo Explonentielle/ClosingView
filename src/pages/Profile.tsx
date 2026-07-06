@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Lock, Star, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { responsiveClass } from "@/lib/responsive";
 import { ChangePasswordModal } from "@/components/modals/ChangePasswordModal";
 
@@ -38,7 +39,8 @@ const Action = ({ icon, title, accent, onClick, danger }: ActionProps) => (
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -48,6 +50,11 @@ const Profile = () => {
     setLoading(false);
     navigate("/login");
   };
+
+  const fullName = profile ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() : "Utilisateur";
+  const initials = profile
+    ? `${(profile.first_name?.[0] || "").toUpperCase()}${(profile.last_name?.[0] || "").toUpperCase()}`
+    : "?";
 
   return (
   <div className={`animate-fade-in space-y-4 ${responsiveClass.tightContainer}`}>
@@ -61,21 +68,33 @@ const Profile = () => {
     >
       <div className="flex items-center gap-4">
         <div
-          className="w-[52px] h-[52px] rounded-full flex items-center justify-center text-[14px] font-bold"
+          className="w-[52px] h-[52px] rounded-full flex items-center justify-center text-[14px] font-bold overflow-hidden"
           style={{
             background: "linear-gradient(135deg,#0EFF9C,#0a8d5e)",
             color: "#0D1117",
             border: "1.5px solid #0EFF9C",
           }}
-        >JD</div>
+        >
+          {user?.user_metadata?.picture ? (
+            <img src={user.user_metadata.picture} alt="Avatar" className="w-full h-full object-cover" />
+          ) : (
+            initials
+          )}
+        </div>
         <div>
-          <h2 className="text-[16px] font-bold text-white">Julien De Bonnières</h2>
-          <p className="text-[11px]" style={{ color: "#8892a0" }}>Senior Closer · Paris, France</p>
+          <h2 className="text-[16px] font-bold text-white">{fullName || "Utilisateur"}</h2>
+          <p className="text-[11px]" style={{ color: "#8892a0" }}>
+            {profile?.city ? `${profile.city}, France` : "Localisation non définie"}
+          </p>
           <div className="flex gap-1.5 mt-1.5">
             <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-              style={{ background: "#0EFF9C18", color: "#0EFF9C" }}>3 ans d'expérience</span>
+              style={{ background: "#0EFF9C18", color: "#0EFF9C" }}>
+              {profile?.experience_years || 0} ans d'expérience
+            </span>
             <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-              style={{ background: "#9B7FE822", color: "#9B7FE8" }}>Score 74</span>
+              style={{ background: "#9B7FE822", color: "#9B7FE8" }}>
+              Score {profile?.close_score || 0}
+            </span>
           </div>
         </div>
       </div>
@@ -85,11 +104,11 @@ const Profile = () => {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <div className="text-[9px] uppercase tracking-wider font-bold" style={{ color: "#8892a0" }}>Email</div>
-          <div className="text-[12px] text-white mt-0.5">julien@closingview.io</div>
+          <div className="text-[12px] text-white mt-0.5 truncate">{profile?.email || "—"}</div>
         </div>
         <div>
           <div className="text-[9px] uppercase tracking-wider font-bold" style={{ color: "#8892a0" }}>Téléphone</div>
-          <div className="text-[12px] text-white mt-0.5">+33 6 12 34 56 78</div>
+          <div className="text-[12px] text-white mt-0.5">{profile?.phone || "—"}</div>
         </div>
       </div>
     </div>

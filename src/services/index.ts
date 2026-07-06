@@ -2,3 +2,4 @@
 export * from './clients';
 export * from './stats';
 export * from './auth';
+export * from './profile';

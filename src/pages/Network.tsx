@@ -19,24 +19,22 @@ const Network = () => {
   const [onlineCount, setOnlineCount] = useState(0);
 
   useEffect(() => {
-    const fiveAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     supabase
       .from("profiles")
       .select("id", { count: "exact", head: true })
-      .gte("last_seen", fiveAgo)
       .then(({ count, error }) => {
         if (error) {
           console.error('Error fetching online count:', error);
-          setOnlineCount(1);
+          setOnlineCount(0);
           return;
         }
-        setOnlineCount(count ?? 1);
+        setOnlineCount(count ?? 0);
       })
       .catch((err) => {
         console.error('Online count error:', err);
-        setOnlineCount(1);
+        setOnlineCount(0);
       });
-  }, [tab]);
+  }, []);
 
   return (
     <div className="animate-fade-in space-y-5">
