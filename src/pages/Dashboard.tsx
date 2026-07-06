@@ -132,23 +132,23 @@ const Dashboard = () => {
           <>
             <InteractiveChart
               title="Taux de Closing"
-              data={chartData.closingRateData.length > 0 ? chartData.closingRateData : [0]}
+              data={chartData.closingRateData}
               color="#0EFF9C"
               badgeFormatter={(avg, hv) =>
                 hv !== undefined ? `${hv} closes` : `Moy. ${Math.round(avg)} closes`
               }
               monthLabels={monthLabels}
-              activeMonthIndex={4}
+              activeMonthIndex={chartData.closingRateData.length - 1}
             />
             <InteractiveChart
               title="Commissions"
-              data={chartData.commissionsData.length > 0 ? chartData.commissionsData : [0]}
+              data={chartData.commissionsData}
               color="#EFB027"
               badgeFormatter={(_, hv) =>
                 hv !== undefined ? `${Math.round(hv).toLocaleString("fr-FR")}€` : `+${trendComm}%`
               }
               monthLabels={monthLabels}
-              activeMonthIndex={4}
+              activeMonthIndex={chartData.commissionsData.length - 1}
             />
           </>
         )}
