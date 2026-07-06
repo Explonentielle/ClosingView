@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
-import { signInWithGoogle } from "@/services";
+import { signIn, signInWithGoogle } from "@/services";
 import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
@@ -17,10 +17,14 @@ const Login = () => {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErr(null); setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setErr(null);
+    setLoading(true);
+    const session = await signIn(email, password);
     setLoading(false);
-    if (error) { setErr(error.message); return; }
+    if (!session) {
+      setErr("Email ou mot de passe incorrect");
+      return;
+    }
     navigate("/dashboard", { replace: true });
   };
 
