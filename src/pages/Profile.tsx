@@ -114,7 +114,11 @@ const Profile = () => {
     </div>
 
     <div className="space-y-2">
-      <Action icon={<Pencil size={14} />} title="Modifier mon profil" />
+      <Action
+        icon={<Pencil size={14} />}
+        title="Modifier mon profil"
+        onClick={() => navigate('/settings')}
+      />
       <Action
         icon={<Lock size={14} />}
         title="Changer mon mot de passe"
