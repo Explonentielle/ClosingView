@@ -114,3 +114,28 @@ export async function getClosingMetrics(userId: string, days: number = 30) {
     count: closes?.length || 0,
   };
 }
+
+export async function getChartData(userId: string, days: number = 30) {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  const startDateStr = startDate.toISOString().split('T')[0];
+
+  const { data: entries, error } = await supabase
+    .from('daily_entries')
+    .select('entry_date, closes_count')
+    .eq('user_id', userId)
+    .gte('entry_date', startDateStr)
+    .order('entry_date', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching chart data:', error);
+    return { closingRateData: [], commissionsData: [] };
+  }
+
+  const closingRateData = entries?.map(e => e.closes_count || 0) || [];
+
+  // Estimate commissions (3000€ avg per close as example, user can customize)
+  const commissionsData = entries?.map(e => (e.closes_count || 0) * 1500) || [];
+
+  return { closingRateData, commissionsData };
+}

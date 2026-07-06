@@ -1,19 +1,22 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DateRange } from "react-day-picker";
 import KpiCard from "@/components/dashboard/KpiCard";
 import ObjectiveBar from "@/components/dashboard/ObjectiveBar";
 import InteractiveChart from "@/components/dashboard/InteractiveChart";
 import DatePickerFilter from "@/components/dashboard/DatePickerFilter";
 import StreakBanner from "@/components/dashboard/StreakBanner";
-import { Range, monthLabels, objectives } from "@/data/mocks";
+import { Range, monthLabels } from "@/data/mocks";
+import { useAuth } from "@/hooks/useAuth";
 import { useUserStats } from "@/hooks/useUserStats";
-import { aggregateStatsData, defaultChartData } from "@/lib/data";
+import { getChartData } from "@/services";
+import { aggregateStatsData } from "@/lib/data";
 import { responsiveClass } from "@/lib/responsive";
 import * as S from './Dashboard.styles';
 
 const RANGES: Range[] = ["7j", "30j", "3m", "1a"];
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [range, setRange] = useState<Range>("30j");
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const isCustom = !!(customRange?.from && customRange?.to);
@@ -21,11 +24,35 @@ const Dashboard = () => {
   const { stats, loading, error } = useUserStats();
   const d = aggregateStatsData(stats, range);
 
+  const [chartData, setChartData] = useState({ closingRateData: [] as number[], commissionsData: [] as number[] });
+  const [chartsLoading, setChartsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchChartData = async () => {
+      setChartsLoading(true);
+      const data = await getChartData(user.id, 30);
+      setChartData(data);
+      setChartsLoading(false);
+    };
+
+    fetchChartData();
+  }, [user]);
+
   const commAvg = useMemo(() => {
-    const data = defaultChartData.commissions;
+    const data = chartData.commissionsData;
+    if (data.length === 0) return 0;
     return Math.round(data.reduce((s, v) => s + v, 0) / data.length);
-  }, []);
-  const trendComm = 18;
+  }, [chartData]);
+
+  const trendComm = useMemo(() => {
+    const data = chartData.commissionsData;
+    if (data.length < 2) return 0;
+    const recent = data[data.length - 1];
+    const prev = data[Math.max(0, data.length - 8)];
+    return prev > 0 ? Math.round(((recent - prev) / prev) * 100) : 0;
+  }, [chartData]);
 
   if (error) {
     return (
@@ -74,39 +101,57 @@ const Dashboard = () => {
 
       {/* 3 Objectifs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {objectives.map((o) => (
-          <ObjectiveBar
-            key={o.label}
-            label={o.label}
-            pct={o.pct}
-            display={o.display}
-            color={o.color as "green" | "yellow" | "blue"}
-          />
-        ))}
+        <ObjectiveBar
+          label="Cash généré"
+          pct={Math.min(100, (d.cash.replace(/[^\d]/g, '') ? parseInt(d.cash.replace(/[^\d]/g, '')) / 15000 * 100 : 0))}
+          display={`${d.cash}`}
+          color="green"
+        />
+        <ObjectiveBar
+          label="Taux closing"
+          pct={Math.min(100, parseInt(d.taux) || 0)}
+          display={`${d.taux}`}
+          color="yellow"
+        />
+        <ObjectiveBar
+          label="Nb. closes"
+          pct={Math.min(100, (d.closes / 10) * 100)}
+          display={`${d.closes}/10`}
+          color="blue"
+        />
       </div>
 
       {/* 2 Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <InteractiveChart
-          title="Taux de Closing"
-          data={defaultChartData.closingRate}
-          color="#0EFF9C"
-          badgeFormatter={(avg, hv) =>
-            hv !== undefined ? `${hv}%` : `Moy. ${Math.round(avg)}%`
-          }
-          monthLabels={monthLabels}
-          activeMonthIndex={4}
-        />
-        <InteractiveChart
-          title="Commissions"
-          data={defaultChartData.commissions}
-          color="#EFB027"
-          badgeFormatter={(_, hv) =>
-            hv !== undefined ? `${hv.toLocaleString("fr-FR")}€` : `+${trendComm}%`
-          }
-          monthLabels={monthLabels}
-          activeMonthIndex={4}
-        />
+        {chartsLoading ? (
+          <>
+            <div className="p-4 text-center text-blue-400">Chargement des graphiques...</div>
+            <div className="p-4 text-center text-blue-400">Chargement des graphiques...</div>
+          </>
+        ) : (
+          <>
+            <InteractiveChart
+              title="Taux de Closing"
+              data={chartData.closingRateData.length > 0 ? chartData.closingRateData : [0]}
+              color="#0EFF9C"
+              badgeFormatter={(avg, hv) =>
+                hv !== undefined ? `${hv} closes` : `Moy. ${Math.round(avg)} closes`
+              }
+              monthLabels={monthLabels}
+              activeMonthIndex={4}
+            />
+            <InteractiveChart
+              title="Commissions"
+              data={chartData.commissionsData.length > 0 ? chartData.commissionsData : [0]}
+              color="#EFB027"
+              badgeFormatter={(_, hv) =>
+                hv !== undefined ? `${Math.round(hv).toLocaleString("fr-FR")}€` : `+${trendComm}%`
+              }
+              monthLabels={monthLabels}
+              activeMonthIndex={4}
+            />
+          </>
+        )}
       </div>
     </div>
   );

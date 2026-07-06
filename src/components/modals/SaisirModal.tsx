@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { X, Check } from "lucide-react";
-import { clients } from "@/data/mocks";
+import { useAuth } from "@/hooks/useAuth";
+import { useClientsList } from "@/hooks/useClientsList";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type Props = { open: boolean; onClose: () => void };
 
 const SaisirModal = ({ open, onClose }: Props) => {
+  const { user } = useAuth();
+  const { clients, loading: clientsLoading } = useClientsList();
+
   const [step, setStep] = useState<1 | 2 | "ok">(1);
-  const [clientId, setClientId] = useState(clients[0].id);
+  const [clientId, setClientId] = useState<string>("");
+  const [saving, setSaving] = useState(false);
   const [r1p, setR1p] = useState(0);
   const [r1e, setR1e] = useState(0);
   const [r2p, setR2p] = useState(0);
@@ -18,6 +25,12 @@ const SaisirModal = ({ open, onClose }: Props) => {
   const [reglement, setReglement] = useState<"X1" | "X2" | "X3" | "X6" | "X10" | null>(null);
   const [closedAt, setClosedAt] = useState<"R1" | "R2" | null>(null);
   const [dateR2, setDateR2] = useState("");
+
+  useEffect(() => {
+    if (open && clients.length > 0 && !clientId) {
+      setClientId(String(clients[0].id));
+    }
+  }, [open, clients, clientId]);
 
   useEffect(() => {
     if (open) {
@@ -32,6 +45,57 @@ const SaisirModal = ({ open, onClose }: Props) => {
   const handleStep1 = () => {
     if (closes > 0) setStep(2);
     else setStep("ok");
+  };
+
+  const handleSave = async () => {
+    if (!user || !clientId) return;
+
+    setSaving(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // Save daily entry
+      const { error: entryError } = await supabase
+        .from('daily_entries')
+        .insert([{
+          user_id: user.id,
+          client_id: clientId,
+          entry_date: today,
+          r1_planned: r1p,
+          r1_done: r1e,
+          r2_planned: r2p,
+          r2_done: r2e,
+          closes_count: closes,
+        }]);
+
+      if (entryError) throw entryError;
+
+      // If there are closes, save them
+      if (closes > 0 && closedAt && contracte > 0) {
+        const closeDate = closedAt === 'R2' && dateR2 ? dateR2 : today;
+        const { error: closeError } = await supabase
+          .from('closes')
+          .insert([{
+            user_id: user.id,
+            client_id: clientId,
+            contracted_amount: contracte,
+            collected_amount: collecte,
+            installments: reglement ? parseInt(reglement.substring(1)) : 1,
+            closed_at_round: closedAt,
+            close_date: closeDate,
+          }]);
+
+        if (closeError) throw closeError;
+      }
+
+      toast.success('Journée enregistrée !');
+      setStep('ok');
+    } catch (err) {
+      console.error('Error saving:', err);
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const reglements = ["X1", "X2", "X3", "X6", "X10"] as const;
@@ -60,10 +124,13 @@ const SaisirModal = ({ open, onClose }: Props) => {
               <span className="text-[10px] uppercase tracking-wide font-bold" style={{ color: "#8892a0" }}>Client</span>
               <select
                 value={clientId}
-                onChange={(e) => setClientId(+e.target.value)}
+                onChange={(e) => setClientId(e.target.value)}
+                disabled={clientsLoading || clients.length === 0}
                 className="w-full mt-1 h-9 rounded-[10px] border-hair px-3 text-[12px] text-white bg-transparent"
                 style={{ background: "#0D1117", borderColor: "#2a3a50" }}
               >
+                {clientsLoading && <option>Chargement...</option>}
+                {!clientsLoading && clients.length === 0 && <option>Aucun client</option>}
                 {clients.map(c => <option key={c.id} value={c.id} style={{ background: "#0D1117" }}>{c.name}</option>)}
               </select>
             </label>
@@ -182,10 +249,11 @@ const SaisirModal = ({ open, onClose }: Props) => {
                 style={{ borderColor: "#2a3a50" }}
               >← Retour</button>
               <button
-                onClick={() => setStep("ok")}
-                className="flex-1 h-10 rounded-[10px] font-bold text-[12px] transition-150"
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1 h-10 rounded-[10px] font-bold text-[12px] transition-150 disabled:opacity-50"
                 style={{ background: "#0EFF9C", color: "#0D1117" }}
-              >Enregistrer →</button>
+              >{saving ? "Enregistrement..." : "Enregistrer →"}</button>
             </div>
           </div>
         )}
