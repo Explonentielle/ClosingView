@@ -132,7 +132,7 @@ const Stats = () => {
             <KpiCell label="Nb. closes" value="7" />
             <KpiCell label="Délai" value="2.3j" />
           </div>
-          <div style={{ height: 130, background: "#161d2e", border: "0.5px solid #2a3a50", borderRadius: 10, padding: "10px 14px", display: "flex", flexDirection: "column", overflow: "hidden", gap: 6 }}>
+          <div style={{ height: 130, background: "#161d2e", border: "0.5px solid #2a3a50", borderRadius: 10, padding: "10px 14px", marginTop: "5px", display: "flex", flexDirection: "column", overflow: "hidden", gap: 6 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ color: "#6b7a99", fontSize: 7.5, fontWeight: 700, letterSpacing: "1.3px", textTransform: "uppercase" }}>Full Pay vs Split Pay</div>
               <div style={{ color: "#0EFF9C", fontSize: 9, fontWeight: 700 }}>60%</div>

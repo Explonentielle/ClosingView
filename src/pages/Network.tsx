@@ -21,11 +21,21 @@ const Network = () => {
   useEffect(() => {
     const fiveAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     supabase
-      .from("auth.users")
+      .from("profiles")
       .select("id", { count: "exact", head: true })
-      .gte("last_sign_in_at", fiveAgo)
-      .then(({ count }) => setOnlineCount(count ?? 0))
-      .catch(() => setOnlineCount(0));
+      .gte("last_seen", fiveAgo)
+      .then(({ count, error }) => {
+        if (error) {
+          console.error('Error fetching online count:', error);
+          setOnlineCount(1);
+          return;
+        }
+        setOnlineCount(count ?? 1);
+      })
+      .catch((err) => {
+        console.error('Online count error:', err);
+        setOnlineCount(1);
+      });
   }, [tab]);
 
   return (

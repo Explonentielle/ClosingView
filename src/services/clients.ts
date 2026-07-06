@@ -8,7 +8,7 @@ export async function getClients(userId: string): Promise<Client[]> {
     .eq('user_id', userId);
 
   if (error) {
-    console.error('Error fetching clients:', error);
+    console.error('Error fetching clients:', error.message, error.details);
     return [];
   }
 
@@ -23,7 +23,8 @@ export async function createClient(client: Omit<Client, 'id' | 'created_at'>): P
     .single();
 
   if (error) {
-    console.error('Error creating client:', error);
+    console.error('Error creating client:', error.message, error.details, error.code);
+    console.error('Client data sent:', client);
     return null;
   }
 
