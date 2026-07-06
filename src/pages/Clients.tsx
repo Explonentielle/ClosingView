@@ -4,6 +4,7 @@ import { useClientsList } from "@/hooks/useClientsList";
 import { getDefaultClients, adaptClientData } from "@/lib/data";
 import { responsiveClass } from "@/lib/responsive";
 import { ClientModal } from "@/components/modals/ClientModal";
+import ClientCardLoader from "@/components/loaders/ClientCardLoader";
 import * as S from './Clients.styles';
 
 type Offer = { name: string; amount: number; split: number };
@@ -38,57 +39,69 @@ const ClientsPage = () => {
       </div>
 
       <div className={responsiveClass.gridCols1to3}>
-        {list.map((c) => {
-          const pillColors: Record<string, string> = { Challenge: "#3B82F6", VSL: "#9B7FE8" };
-          const nicheColor = c.color;
-          return (
-            <div
-              key={c.id}
-              className="rounded-[12px] border-hair p-4 flex flex-col gap-3 transition-150 hover:scale-[1.005]"
-              style={{ background: "#161d2e", borderColor: "#2a3a50" }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = c.color)}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#2a3a50")}
-            >
-              <div className="flex items-center gap-3">
+        {loading ? (
+          <>
+            {[...Array(6)].map((_, i) => (
+              <ClientCardLoader key={i} />
+            ))}
+          </>
+        ) : (
+          <>
+            {list.map((c) => {
+              const pillColors: Record<string, string> = { Challenge: "#3B82F6", VSL: "#9B7FE8" };
+              const nicheColor = c.color;
+              return (
                 <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold"
-                  style={{ background: `${c.color}22`, color: c.color, border: `0.5px solid ${c.color}55` }}
-                >{c.initials}</div>
-                <div>
-                  <p className="text-[13px] font-bold text-white leading-tight">{c.name}</p>
+                  key={c.id}
+                  className="rounded-[12px] border-hair p-4 flex flex-col gap-3 transition-150 hover:scale-[1.005]"
+                  style={{ background: "#161d2e", borderColor: "#2a3a50" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = c.color)}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#2a3a50")}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold"
+                      style={{ background: `${c.color}22`, color: c.color, border: `0.5px solid ${c.color}55` }}
+                    >{c.initials}</div>
+                    <div>
+                      <p className="text-[13px] font-bold text-white leading-tight">{c.name}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-1.5 flex-wrap">
+                    <span
+                      className="text-[9px] font-bold px-2 py-1 rounded-full"
+                      style={{ background: `${nicheColor}18`, color: nicheColor }}
+                    >{c.niche}</span>
+                    {c.type.map((t) => (
+                      <span key={t}
+                        className="text-[9px] font-bold px-2 py-1 rounded-full"
+                        style={{ background: `${pillColors[t]}18`, color: pillColors[t] }}
+                      >{t}</span>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between border-t-[0.5px] pt-3" style={{ borderColor: "#2a3a50" }}>
+                    <span className="text-[14px] font-bold" style={{ color: "#0EFF9C" }}>
+                      {c.amount.toLocaleString("fr-FR")}€
+                    </span>
+                    <span className="text-[10px]" style={{ color: "#8892a0" }}>
+                      {c.offers} offre{c.offers > 1 ? "s" : ""}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              );
+            })}
+          </>
+        )}
 
-              <div className="flex gap-1.5 flex-wrap">
-                <span
-                  className="text-[9px] font-bold px-2 py-1 rounded-full"
-                  style={{ background: `${nicheColor}18`, color: nicheColor }}
-                >{c.niche}</span>
-                {c.type.map((t) => (
-                  <span key={t}
-                    className="text-[9px] font-bold px-2 py-1 rounded-full"
-                    style={{ background: `${pillColors[t]}18`, color: pillColors[t] }}
-                  >{t}</span>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between border-t-[0.5px] pt-3" style={{ borderColor: "#2a3a50" }}>
-                <span className="text-[14px] font-bold" style={{ color: "#0EFF9C" }}>
-                  {c.amount.toLocaleString("fr-FR")}€
-                </span>
-                <span className="text-[10px]" style={{ color: "#8892a0" }}>
-                  {c.offers} offre{c.offers > 1 ? "s" : ""}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-
-        <button
-          onClick={() => setOpen(true)}
-          className="rounded-[12px] p-4 flex items-center justify-center text-[12px] font-bold transition-150 hover:bg-white/[0.02]"
-          style={{ border: "1.5px dashed #2a3a50", color: "#6b7a99", minHeight: 132 }}
-        >+ Ajouter un client</button>
+        {!loading && (
+          <button
+            onClick={() => setOpen(true)}
+            className="rounded-[12px] p-4 flex items-center justify-center text-[12px] font-bold transition-150 hover:bg-white/[0.02]"
+            style={{ border: "1.5px dashed #2a3a50", color: "#6b7a99", minHeight: 132 }}
+          >+ Ajouter un client</button>
+        )}
       </div>
 
       <ClientModal

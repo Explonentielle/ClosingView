@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import CommunityTab from "@/components/network/CommunityTab";
 import MembersTab from "@/components/network/MembersTab";
 import LeaderboardTab from "@/components/network/LeaderboardTab";
-import MapTab from "@/components/network/MapTab";
+import MapFrance from "@/components/network/MapFrance";
 
 type TabKey = "community" | "members" | "leaderboard" | "map";
 
@@ -72,7 +72,7 @@ const Network = () => {
       {tab === "community"   && <CommunityTab />}
       {tab === "members"     && <MembersTab />}
       {tab === "leaderboard" && <LeaderboardTab />}
-      {tab === "map"         && <MapTab />}
+      {tab === "map"         && <MapFrance />}
     </div>
   );
 };
