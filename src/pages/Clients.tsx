@@ -1,163 +1,41 @@
 import { useState } from "react";
-import { X, Plus } from "lucide-react";
-import { clients as seedClients } from "@/data/mocks";
+import { useClientsList } from "@/hooks/useClientsList";
+import { getDefaultClients, adaptClientData } from "@/lib/data";
+import { responsiveClass } from "@/lib/responsive";
+import { ClientModal } from "@/components/modals/ClientModal";
+import * as S from './Clients.styles';
 
 type Offer = { name: string; amount: number; split: number };
-type Client = typeof seedClients[number] & { type: string[] };
-
-const NICHES = ["Développement perso", "Business en ligne", "Immobilier", "Trading", "Bien-être", "Autre"];
-
-const ClientModal = ({ open, onClose, onCreate }: { open: boolean; onClose: () => void; onCreate: (c: any) => void }) => {
-  const [name, setName] = useState("");
-  const [types, setTypes] = useState<string[]>([]);
-  const [niche, setNiche] = useState(NICHES[0]);
-  const [offers, setOffers] = useState<Offer[]>([{ name: "", amount: 0, split: 1 }]);
-
-  if (!open) return null;
-
-  const toggleType = (t: string) =>
-    setTypes((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]));
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
-      style={{ background: "rgba(13,17,23,0.75)", backdropFilter: "blur(8px)" }}
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-[480px] rounded-[14px] border-hair p-5 max-h-[90vh] overflow-y-auto"
-        style={{ background: "#161d2e", borderColor: "#2a3a50" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[14px] font-bold text-white">Ajouter un client</h2>
-          <button onClick={onClose} className="text-muted hover:text-white"><X size={16} /></button>
-        </div>
-
-        <div className="space-y-3">
-          <label className="block">
-            <span className="text-[10px] uppercase tracking-wide font-bold" style={{ color: "#8892a0" }}>Nom du client</span>
-            <input
-              value={name} onChange={(e) => setName(e.target.value)}
-              className="w-full mt-1 h-9 rounded-[10px] border-hair px-3 text-[12px] text-white"
-              style={{ background: "#0D1117", borderColor: "#2a3a50" }}
-              placeholder="ex: Thomas Coaching"
-            />
-          </label>
-
-          <div>
-            <span className="text-[10px] uppercase tracking-wide font-bold" style={{ color: "#8892a0" }}>Type</span>
-            <div className="flex gap-2 mt-1.5">
-              {[
-                { id: "VSL",       color: "#9B7FE8" },
-                { id: "Challenge", color: "#3B82F6" },
-              ].map(({ id, color }) => {
-                const active = types.includes(id);
-                return (
-                  <button key={id} onClick={() => toggleType(id)}
-                    className="px-3 h-8 rounded-full text-[11px] font-bold border-hair flex items-center gap-1.5 transition-150"
-                    style={{
-                      background: active ? `${color}22` : "transparent",
-                      borderColor: active ? color : "#2a3a50",
-                      color: active ? color : "#8892a0",
-                    }}
-                  >
-                    {active && <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />}
-                    {id}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <label className="block">
-            <span className="text-[10px] uppercase tracking-wide font-bold" style={{ color: "#8892a0" }}>Niche</span>
-            <select
-              value={niche} onChange={(e) => setNiche(e.target.value)}
-              className="w-full mt-1 h-9 rounded-[10px] border-hair px-3 text-[12px] text-white"
-              style={{ background: "#0D1117", borderColor: "#2a3a50" }}
-            >
-              {NICHES.map(n => <option key={n} value={n} style={{ background: "#0D1117" }}>{n}</option>)}
-            </select>
-          </label>
-
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] uppercase tracking-wide font-bold" style={{ color: "#8892a0" }}>Offres</span>
-              <button
-                onClick={() => setOffers((o) => [...o, { name: "", amount: 0, split: 1 }])}
-                className="text-[10px] font-bold flex items-center gap-1"
-                style={{ color: "#0EFF9C" }}
-              >
-                <Plus size={12} /> Ajouter une offre
-              </button>
-            </div>
-            <div className="space-y-2">
-              {offers.map((o, i) => (
-                <div key={i} className="rounded-[10px] border-hair p-3 space-y-2" style={{ background: "#0D1117", borderColor: "#2a3a50" }}>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      value={o.name}
-                      onChange={(e) => setOffers((arr) => arr.map((x, j) => j === i ? { ...x, name: e.target.value } : x))}
-                      placeholder="Nom de l'offre"
-                      className="h-8 rounded-md border-hair px-2 text-[11px] text-white"
-                      style={{ background: "#161d2e", borderColor: "#2a3a50" }}
-                    />
-                    <input
-                      type="number" value={o.amount}
-                      onChange={(e) => setOffers((arr) => arr.map((x, j) => j === i ? { ...x, amount: +e.target.value } : x))}
-                      placeholder="€"
-                      className="h-8 rounded-md border-hair px-2 text-[11px] text-white"
-                      style={{ background: "#161d2e", borderColor: "#2a3a50" }}
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between text-[10px]" style={{ color: "#8892a0" }}>
-                      <span>Règlement</span>
-                      <span style={{ color: "#0EFF9C" }} className="font-bold">X{o.split}</span>
-                    </div>
-                    <input
-                      type="range" min={1} max={10} value={o.split}
-                      onChange={(e) => setOffers((arr) => arr.map((x, j) => j === i ? { ...x, split: +e.target.value } : x))}
-                      className="w-full mt-1 accent-[#0EFF9C]"
-                      style={{ background: "linear-gradient(90deg,#0EFF9C33,#0EFF9C)" }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={() => { onCreate({ name, types, niche, offers }); onClose(); }}
-            className="w-full h-10 rounded-[10px] font-bold text-[12px] transition-150"
-            style={{ background: "#0EFF9C", color: "#0D1117" }}
-          >Enregistrer le client</button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const ClientsPage = () => {
-  const [list, setList] = useState<Client[]>(seedClients as Client[]);
+  const { clients: realClients, loading, error, createClient, refetch } = useClientsList();
   const [open, setOpen] = useState(false);
 
+  // Use real clients if available, otherwise use mock data
+  const displayClients = realClients.length > 0 ? realClients : getDefaultClients();
+  const list = displayClients.map(adaptClientData);
+
   return (
-    <div className="animate-fade-in space-y-5 max-w-[1280px]">
-      <div className="flex items-end justify-between">
+    <div className={`animate-fade-in space-y-5 ${responsiveClass.mainContainer}`}>
+      {error && (
+        <div className="p-3 sm:p-4 rounded-lg bg-red-500/10 border border-red-500/50">
+          <p className="text-red-400 text-[12px] sm:text-[13px]">Erreur lors du chargement des clients: {error}</p>
+        </div>
+      )}
+
+      <div className="flex items-end justify-between flex-col sm:flex-row gap-3">
         <div>
-          <h2 className="text-[18px] font-bold text-white">Mes clients</h2>
-          <p className="text-[11px]" style={{ color: "#8892a0" }}>{list.length} clients actifs</p>
+          <h2 className="text-lg sm:text-xl font-bold text-white">Mes clients</h2>
+          <p className="text-[10px] sm:text-[11px]" style={{ color: "#8892a0" }}>{list.length} clients actifs</p>
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="h-9 px-4 rounded-[10px] text-[11px] font-bold transition-150"
+          className="w-full sm:w-auto h-8 sm:h-9 px-3 sm:px-4 rounded-[10px] text-[10px] sm:text-[11px] font-bold transition-150"
           style={{ background: "#0EFF9C", color: "#0D1117" }}
         >+ Nouveau client</button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className={responsiveClass.gridCols1to3}>
         {list.map((c) => {
           const pillColors: Record<string, string> = { Challenge: "#3B82F6", VSL: "#9B7FE8" };
           const nicheColor = c.color;
@@ -213,19 +91,26 @@ const ClientsPage = () => {
 
       <ClientModal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false);
+          refetch();
+        }}
         onCreate={(c) => {
-          const id = list.length + 1;
-          const initials = c.name.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase() || "??";
-          setList((l) => [
-            ...l,
-            {
-              id, initials, name: c.name || "Sans nom",
-              color: "#3B82F6", niche: c.niche, type: c.types,
-              amount: c.offers.reduce((s: number, o: Offer) => s + o.amount, 0),
-              offers: c.offers.length,
-            },
-          ]);
+          const clientData = {
+            user_id: '',
+            name: c.name || "Sans nom",
+            niche: c.niche,
+            types: c.types,
+            offers: c.offers.map((o: Offer) => ({
+              name: o.name,
+              amount: o.amount,
+              split: o.split,
+            })),
+            created_at: new Date().toISOString(),
+          };
+          createClient(clientData);
+          setOpen(false);
+          refetch();
         }}
       />
     </div>

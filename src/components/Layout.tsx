@@ -2,6 +2,8 @@ import { Outlet, useLocation } from "react-router-dom";
 import { useState } from "react";
 import Sidebar from "./Sidebar";
 import SaisirModal from "./modals/SaisirModal";
+import { ProfileDropdown } from "./ProfileDropdown";
+import { responsiveClass } from "@/lib/responsive";
 import { MessagingProvider } from "@/hooks/useMessaging";
 import PrivateMessaging from "@/components/messaging/PrivateMessaging";
 import OnboardingFlow from "@/components/OnboardingFlow";
@@ -50,16 +52,11 @@ const Layout = () => {
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#0EFF9C" }} />
                 SCORE 74
               </div>
-              <div
-                className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-[10px] font-bold"
-                style={{ background: "linear-gradient(135deg,#0EFF9C,#0a8d5e)", color: "#0D1117" }}
-              >
-                JD
-              </div>
+              <ProfileDropdown initials="JD" />
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-5 lg:p-6" style={{ background: "#0D1117" }}>
+          <main className={`flex-1 overflow-y-auto ${responsiveClass.mainPadding}`} style={{ background: "#0D1117" }}>
             <Outlet />
           </main>
         </div>

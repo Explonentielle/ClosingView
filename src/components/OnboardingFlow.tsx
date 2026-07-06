@@ -8,9 +8,9 @@ import {
   Globe2,
   Star,
   Lock,
-  ArrowRight,
   ChevronRight,
 } from "lucide-react";
+import * as S from './OnboardingFlow.styles';
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -24,13 +24,6 @@ type EntryDraft = {
   closes_count: number;
   amount: number;
   amountType: "HT" | "TTC";
-};
-
-const COLORS = {
-  green: "#0EFF9C",
-  blue: "#3b82f6",
-  purple: "#9B7FE8",
-  yellow: "#EFB027",
 };
 
 const OnboardingFlow = () => {
@@ -210,38 +203,14 @@ const OnboardingFlow = () => {
   const completed = step;
   const dots = [1, 2, 3, 4, 5, 6];
 
-  const inputCls =
-    "w-full h-[36px] px-3 rounded-[8px] text-[12px] text-white outline-none transition-colors";
-  const inputStyle = {
-    background: "#1e2535",
-    border: "0.5px solid #2a3a50",
-  } as const;
-
-  const primaryBtn =
-    "w-full h-[44px] rounded-[10px] text-[13px] font-bold transition-transform active:scale-[0.98]";
-  const primaryStyle = { background: COLORS.green, color: "#0D1117" } as const;
-
-  const backLink = "text-[11px] mt-2";
-  const backStyle = { color: "#6b7a99" } as const;
-
   return (
     <div
       className="fixed inset-0 flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.78)", zIndex: 9999 }}
+      style={S.modalOverlay}
     >
       <div
         className="flex flex-col gap-4"
-        style={{
-          background: "#161d2e",
-          border: "0.5px solid #2a3a50",
-          borderRadius: 18,
-          padding: 28,
-          width: 350,
-          maxHeight: "92vh",
-          overflowY: "auto",
-          transform: `scale(${0.94 + 0.06 * (visible ? 1 : 0)})`,
-          animation: "onbCardIn 250ms ease-out",
-        }}
+        style={S.modalCard(visible, anim)}
       >
         {/* Dots */}
         <div className="flex justify-center gap-2">
@@ -251,14 +220,7 @@ const OnboardingFlow = () => {
             return (
               <span
                 key={d}
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: isDone || isActive ? COLORS.green : "#2a3a50",
-                  boxShadow: isActive ? `0 0 0 3px rgba(14,255,156,0.3)` : "none",
-                  transition: "all 200ms",
-                }}
+                style={S.dot(isDone, isActive)}
               />
             );
           })}
@@ -266,11 +228,7 @@ const OnboardingFlow = () => {
 
         <div
           key={step}
-          style={{
-            opacity: anim,
-            transform: `translateY(${(1 - anim) * 8}px)`,
-            transition: "opacity 250ms ease-out, transform 250ms ease-out",
-          }}
+          style={S.stepContent(anim)}
         >
           {step === 1 && (
             <div className="flex flex-col gap-4">
@@ -316,7 +274,7 @@ const OnboardingFlow = () => {
                 />
               </div>
 
-              <button className={primaryBtn} style={primaryStyle} onClick={() => goTo(2)}>
+              <button className={S.button()} style={S.buttonStyle(S.COLORS.green)} onClick={() => goTo(2)}>
                 C'est parti ! →
               </button>
             </div>
@@ -335,8 +293,8 @@ const OnboardingFlow = () => {
                 <>
                   <Field label="NOM">
                     <input
-                      className={inputCls}
-                      style={inputStyle}
+                      className={S.input()}
+                      style={S.inputStyle}
                       placeholder="Ex : Thomas Coaching"
                       value={clientName}
                       onChange={(e) => setClientName(e.target.value)}
@@ -344,8 +302,8 @@ const OnboardingFlow = () => {
                   </Field>
                   <Field label="TYPE">
                     <select
-                      className={inputCls}
-                      style={inputStyle}
+                      className={S.input()}
+                      style={S.inputStyle}
                       value={clientType}
                       onChange={(e) => setClientType(e.target.value)}
                     >
@@ -355,8 +313,8 @@ const OnboardingFlow = () => {
                   </Field>
                   <Field label="NICHE">
                     <input
-                      className={inputCls}
-                      style={inputStyle}
+                      className={S.input()}
+                      style={S.inputStyle}
                       placeholder="Business..."
                       value={clientNiche}
                       onChange={(e) => setClientNiche(e.target.value)}
@@ -364,8 +322,8 @@ const OnboardingFlow = () => {
                   </Field>
                   <Field label="OFFRE PRINCIPALE">
                     <input
-                      className={inputCls}
-                      style={inputStyle}
+                      className={S.input()}
+                      style={S.inputStyle}
                       placeholder="Ex : Mastermind Elite · 3 500€"
                       value={clientOffer}
                       onChange={(e) => setClientOffer(e.target.value)}
@@ -373,16 +331,16 @@ const OnboardingFlow = () => {
                   </Field>
 
                   <button
-                    className={primaryBtn}
-                    style={{ ...primaryStyle, opacity: busy ? 0.6 : 1 }}
+                    className={S.button()}
+                    style={{ ...S.buttonStyle(S.COLORS.green), opacity: busy ? 0.6 : 1 }}
                     disabled={busy}
                     onClick={saveClient}
                   >
                     Ajouter ce client →
                   </button>
                   <button
-                    className={backLink}
-                    style={{ ...backStyle, background: "transparent" }}
+                    className="text-[11px] mt-2"
+                    style={{ ...S.backLinkStyle, background: "transparent" }}
                     onClick={() => goTo(1)}
                   >
                     ← Retour
@@ -416,8 +374,8 @@ const OnboardingFlow = () => {
                 <>
                   <Field label="CLIENT">
                     <select
-                      className={inputCls}
-                      style={inputStyle}
+                      className={S.input()}
+                      style={S.inputStyle}
                       value={entry.client_id ?? ""}
                       onChange={(e) => setEntry({ ...entry, client_id: e.target.value })}
                     >
@@ -431,8 +389,8 @@ const OnboardingFlow = () => {
                   </Field>
                   <Field label="OFFRE">
                     <select
-                      className={inputCls}
-                      style={inputStyle}
+                      className={S.input()}
+                      style={S.inputStyle}
                       value={entry.offer_id ?? ""}
                       onChange={(e) => setEntry({ ...entry, offer_id: e.target.value })}
                     >
@@ -471,8 +429,8 @@ const OnboardingFlow = () => {
                   <Field label="CLOSES">
                     <input
                       type="number"
-                      className={inputCls}
-                      style={inputStyle}
+                      className={S.input()}
+                      style={S.inputStyle}
                       value={entry.closes_count}
                       onChange={(e) =>
                         setEntry({ ...entry, closes_count: Number(e.target.value) || 0 })
@@ -483,16 +441,16 @@ const OnboardingFlow = () => {
                     <div className="flex gap-2">
                       <input
                         type="number"
-                        className={inputCls}
-                        style={inputStyle}
+                        className={S.input()}
+                        style={S.inputStyle}
                         value={entry.amount}
                         onChange={(e) =>
                           setEntry({ ...entry, amount: Number(e.target.value) || 0 })
                         }
                       />
                       <select
-                        className={inputCls}
-                        style={{ ...inputStyle, width: 80 }}
+                        className={S.input()}
+                        style={{ ...S.inputStyle, width: 80 }}
                         value={entry.amountType}
                         onChange={(e) =>
                           setEntry({ ...entry, amountType: e.target.value as "HT" | "TTC" })
@@ -505,16 +463,16 @@ const OnboardingFlow = () => {
                   </Field>
 
                   <button
-                    className={primaryBtn}
-                    style={{ ...primaryStyle, opacity: busy ? 0.6 : 1 }}
+                    className={S.button()}
+                    style={{ ...S.buttonStyle(S.COLORS.blue), opacity: busy ? 0.6 : 1 }}
                     disabled={busy}
                     onClick={saveEntry}
                   >
                     Valider ✓
                   </button>
                   <button
-                    className={backLink}
-                    style={{ ...backStyle, background: "transparent" }}
+                    className="text-[11px] mt-2"
+                    style={{ ...S.backLinkStyle, background: "transparent" }}
                     onClick={() => goTo(2)}
                   >
                     ← Retour
@@ -609,12 +567,12 @@ const OnboardingFlow = () => {
                   </div>
                 </div>
               </div>
-              <button className={primaryBtn} style={primaryStyle} onClick={() => goTo(5)}>
+              <button className={S.button()} style={S.buttonStyle(S.COLORS.purple)} onClick={() => goTo(5)}>
                 Découvrir le Réseau →
               </button>
               <button
-                className={backLink}
-                style={{ ...backStyle, background: "transparent" }}
+                className="text-[11px] mt-2"
+                style={{ ...S.backLinkStyle, background: "transparent" }}
                 onClick={() => goTo(3)}
               >
                 ← Retour
@@ -653,12 +611,12 @@ const OnboardingFlow = () => {
                 badge="Privé"
               />
 
-              <button className={primaryBtn} style={primaryStyle} onClick={() => goTo(6)}>
+              <button className={S.button()} style={S.buttonStyle(S.COLORS.green)} onClick={() => goTo(6)}>
                 Rejoindre →
               </button>
               <button
-                className={backLink}
-                style={{ ...backStyle, background: "transparent" }}
+                className="text-[11px] mt-2"
+                style={{ ...S.backLinkStyle, background: "transparent" }}
                 onClick={() => goTo(4)}
               >
                 ← Retour
@@ -730,7 +688,7 @@ const OnboardingFlow = () => {
                 ))}
               </div>
 
-              <button className={primaryBtn} style={primaryStyle} onClick={finish}>
+              <button className={S.button()} style={S.buttonStyle(S.COLORS.green)} onClick={finish}>
                 Accéder à mon Dashboard 🚀
               </button>
             </div>
@@ -738,12 +696,7 @@ const OnboardingFlow = () => {
         </div>
       </div>
 
-      <style>{`
-        @keyframes onbCardIn {
-          from { opacity: 0; transform: scale(0.94); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
+      <style>{S.keyframes}</style>
     </div>
   );
 };
@@ -764,18 +717,11 @@ const ActionRow = ({
   <button
     onClick={onClick}
     className="flex items-center gap-3 p-2.5 rounded-[10px] text-left transition-colors"
-    style={{ background: "#0a0f1a", border: "0.5px solid #2a3a50" }}
+    style={S.actionButton}
   >
     <span
       className="flex items-center justify-center"
-      style={{
-        width: 28,
-        height: 28,
-        borderRadius: 8,
-        background: `${color}18`,
-        border: `0.5px solid ${color}44`,
-        color,
-      }}
+      style={S.actionIcon(color)}
     >
       {icon}
     </span>
@@ -800,13 +746,7 @@ const StepHeader = ({
   <div className="flex flex-col items-center text-center gap-2">
     <span
       className="flex items-center justify-center"
-      style={{
-        width: 52,
-        height: 52,
-        borderRadius: 12,
-        background: `${color}18`,
-        border: `0.5px solid ${color}44`,
-      }}
+      style={S.stepHeaderIcon(color)}
     >
       {icon}
     </span>
@@ -819,14 +759,7 @@ const StepHeader = ({
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <label className="flex flex-col gap-1">
-    <span
-      style={{
-        color: "#8892a0",
-        fontSize: 9,
-        fontWeight: 700,
-        letterSpacing: 1.2,
-      }}
-    >
+    <span style={S.fieldLabel}>
       {label}
     </span>
     {children}
@@ -849,7 +782,7 @@ const NumField = ({
     <input
       type="number"
       className="w-full h-[34px] px-2 rounded-[8px] text-[12px] text-white outline-none"
-      style={{ background: "#1e2535", border: "0.5px solid #2a3a50" }}
+      style={S.numFieldInput}
       value={v}
       onChange={(e) => onChange(Number(e.target.value) || 0)}
     />
@@ -909,18 +842,11 @@ const NetBlock = ({
 }) => (
   <div
     className="flex items-center gap-2.5 rounded-[10px]"
-    style={{ background: "#0a0f1a", padding: 11, border: "0.5px solid #2a3a50" }}
+    style={S.netBlock(color)}
   >
     <span
       className="flex items-center justify-center"
-      style={{
-        width: 30,
-        height: 30,
-        borderRadius: 8,
-        background: `${color}18`,
-        border: `0.5px solid ${color}44`,
-        fontSize: 14,
-      }}
+      style={S.netBlockIcon(color)}
     >
       {emoji}
     </span>
@@ -930,16 +856,7 @@ const NetBlock = ({
       </div>
       <div style={{ color: "#8892a0", fontSize: 10 }}>{desc}</div>
     </div>
-    <span
-      style={{
-        color,
-        fontSize: 10,
-        fontWeight: 700,
-        background: `${color}18`,
-        padding: "3px 8px",
-        borderRadius: 6,
-      }}
-    >
+    <span style={S.netBlockBadge(color)}>
       {badge}
     </span>
   </div>

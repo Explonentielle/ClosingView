@@ -1,15 +1,19 @@
-import { Settings, User, Bell, Shield, Palette } from "lucide-react";
+import { useState } from "react";
+import { User, Bell, Shield, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { responsiveClass } from "@/lib/responsive";
+import { ChangePasswordModal } from "@/components/modals/ChangePasswordModal";
 
 const SettingsView = () => {
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const handleSave = () => toast.success("Paramètres sauvegardés !");
 
   const inputClass = "w-full h-11 rounded-lg border border-input bg-secondary/50 px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all";
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-slide-up">
+    <div className={`${responsiveClass.tightContainer} space-y-6 animate-slide-up`}>
       <div>
-        <h2 className="text-2xl font-bold">Paramètres</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold">Paramètres</h2>
         <p className="text-muted-foreground text-sm mt-1">Gérez votre compte et vos préférences</p>
       </div>
 
@@ -47,9 +51,25 @@ const SettingsView = () => {
         ))}
       </div>
 
+      <div className="glass-card p-6 space-y-4">
+        <div className="flex items-center gap-3 mb-2">
+          <Shield size={18} className="text-primary" />
+          <h3 className="font-semibold">Sécurité</h3>
+        </div>
+        <button
+          onClick={() => setChangePasswordOpen(true)}
+          className="w-full h-11 rounded-lg border border-primary/30 text-primary font-semibold text-sm hover:bg-primary/10 transition-colors flex items-center justify-center gap-2"
+        >
+          <Lock size={16} />
+          Changer le mot de passe
+        </button>
+      </div>
+
       <button onClick={handleSave} className="w-full h-11 rounded-lg gradient-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
         Sauvegarder
       </button>
+
+      <ChangePasswordModal open={changePasswordOpen} onClose={() => setChangePasswordOpen(false)} />
     </div>
   );
 };

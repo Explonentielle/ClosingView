@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { signInWithGoogle } from "@/services";
 import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
@@ -25,11 +25,13 @@ const Login = () => {
   };
 
   const google = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin },
-    });
-    if (error) setErr(error.message);
+    setErr(null);
+    setLoading(true);
+    const session = await signInWithGoogle();
+    setLoading(false);
+    if (!session) {
+      setErr("Erreur lors de la connexion Google");
+    }
   };
 
   return (
@@ -70,6 +72,9 @@ const Login = () => {
               </button>
             </div>
             {err && <p className="mt-1.5 text-[11px]" style={{ color: "#F87171" }}>{err}</p>}
+            <Link to="/forgot-password" className="block mt-2 text-[11px] font-semibold hover:text-white transition-colors" style={{ color: "#0EFF9C" }}>
+              Mot de passe oublié?
+            </Link>
           </div>
 
           <button
