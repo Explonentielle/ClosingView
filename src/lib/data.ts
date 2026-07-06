@@ -47,25 +47,11 @@ export const defaultChartData = {
 /**
  * Adapts client data with UI properties (color, initials, etc.)
  */
-export function adaptClientData(client: Client & { color?: string; initials?: string; amount?: number; offers?: number }) {
-  const initials =
-    client.initials ||
-    client.name
-      .split(' ')
-      .map((w: string) => w[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase() || '??';
-
-  const COLORS = ['#0EFF9C', '#EFB027', '#3B82F6', '#9B7FE8', '#F87171'];
-  const color = client.color || COLORS[Math.abs(client.id.charCodeAt(0)) % COLORS.length];
-
+export function adaptClientData(client: Client) {
   return {
     ...client,
-    initials,
-    color,
-    amount: client.amount || 0,
-    offers: client.offers || 0,
+    amount: client.total_amount || 0,
+    offers: 0,
   };
 }
 

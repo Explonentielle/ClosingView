@@ -99,15 +99,27 @@ const ClientsPage = () => {
         }}
         onCreate={(c) => {
           if (!user) return;
+          const initials = c.name
+            .split(' ')
+            .slice(0, 2)
+            .map(w => w[0].toUpperCase())
+            .join('');
+          const colors = ["#0EFF9C", "#3B82F6", "#9B7FE8", "#F87171", "#EFB027"];
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          const totalAmount = c.offers.reduce((sum, o) => sum + o.amount, 0);
+
           const clientData = {
             user_id: user.id,
             name: c.name || "Sans nom",
             niche: c.niche,
-            types: c.types,
+            type: c.types,
+            initials,
+            color,
+            total_amount: totalAmount,
             offers: c.offers.map((o: Offer) => ({
               name: o.name,
               amount: o.amount,
-              split: o.split,
+              max_installments: o.split || 1,
             })),
           };
           createClient(clientData);

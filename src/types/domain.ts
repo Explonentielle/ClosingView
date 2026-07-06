@@ -5,16 +5,21 @@ export interface Client {
   user_id: string;
   name: string;
   niche: string;
-  types: string[];
-  offers: Offer[];
+  type: string[];
+  initials: string;
+  color: string;
+  total_amount: number;
   created_at: string;
-  updated_at?: string;
 }
 
 export interface Offer {
+  id: string;
+  client_id: string;
+  user_id: string;
   name: string;
   amount: number;
-  split: number;
+  max_installments: number;
+  created_at: string;
 }
 
 export interface Stat {

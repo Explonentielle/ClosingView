@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { Client } from '@/types';
+import type { Client, Offer } from '@/types';
 
 export async function getClients(userId: string): Promise<Client[]> {
   const { data, error } = await supabase
@@ -15,20 +15,49 @@ export async function getClients(userId: string): Promise<Client[]> {
   return data ?? [];
 }
 
-export async function createClient(client: Omit<Client, 'id' | 'created_at'>): Promise<Client | null> {
-  const { data, error } = await supabase
+export async function createClient(clientData: {
+  user_id: string;
+  name: string;
+  niche: string;
+  type: string[];
+  initials: string;
+  color: string;
+  total_amount: number;
+  offers: Array<{ name: string; amount: number; max_installments: number }>;
+}): Promise<Client | null> {
+  const { offers, ...clientPayload } = clientData;
+
+  const { data: newClient, error: clientError } = await supabase
     .from('clients')
-    .insert([client])
+    .insert([clientPayload])
     .select()
     .single();
 
-  if (error) {
-    console.error('Error creating client:', error.message, error.details, error.code);
-    console.error('Client data sent:', client);
+  if (clientError) {
+    console.error('Error creating client:', clientError.message, clientError.details, clientError.code);
+    console.error('Client payload:', clientPayload);
     return null;
   }
 
-  return data;
+  if (offers && offers.length > 0) {
+    const offersPayload = offers.map(o => ({
+      client_id: newClient.id,
+      user_id: clientData.user_id,
+      name: o.name,
+      amount: o.amount,
+      max_installments: o.max_installments || 1,
+    }));
+
+    const { error: offersError } = await supabase
+      .from('offers')
+      .insert(offersPayload);
+
+    if (offersError) {
+      console.error('Error creating offers:', offersError.message);
+    }
+  }
+
+  return newClient;
 }
 
 export async function updateClient(id: string, updates: Partial<Client>): Promise<Client | null> {

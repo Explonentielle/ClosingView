@@ -33,7 +33,7 @@ export function useClientsList() {
     fetchClients();
   }, [user]);
 
-  const createClient = async (clientData: Omit<Client, 'id' | 'created_at'>) => {
+  const createClient = async (clientData: any) => {
     if (!user) return null;
 
     try {
