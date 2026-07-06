@@ -109,22 +109,12 @@ const InteractiveChart = ({ title, data, color, badgeFormatter, monthLabels, act
         {/* hover */}
         {hover !== null && (() => {
           const [hx, hy] = points[hover];
-          const [px, py] = points[Math.max(0, hover - 1)];
-          const [nx, ny] = points[Math.min(points.length - 1, hover + 1)];
           return (
             <g pointerEvents="none">
-              <line x1={hx} x2={hx} y1={P.t} y2={H - P.b} stroke="#ffffff" strokeOpacity="0.4" strokeWidth="0.6" />
-              {/* segment blanc brillant sur la courbe */}
-              <path
-                d={`M ${px} ${py} Q ${hx} ${hy} ${nx} ${ny}`}
-                fill="none" stroke="#ffffff" strokeWidth="2"
-              />
-              {/* halo 4 cercles concentriques empilés (sans feGaussianBlur) */}
-              <circle cx={hx} cy={hy} r="16" fill="#ffffff" fillOpacity="0.04" />
-              <circle cx={hx} cy={hy} r="11" fill="#ffffff" fillOpacity="0.07" />
-              <circle cx={hx} cy={hy} r="7"  fill="#ffffff" fillOpacity="0.12" />
-              <circle cx={hx} cy={hy} r="4"  fill="#ffffff" fillOpacity="0.25" />
-              <circle cx={hx} cy={hy} r="2.5" fill="#ffffff" />
+              <line x1={hx} x2={hx} y1={P.t} y2={H - P.b} stroke={color} strokeOpacity="0.6" strokeWidth="1.2" />
+              {/* halo discret */}
+              <circle cx={hx} cy={hy} r="4.5" fill={color} fillOpacity="0.3" />
+              <circle cx={hx} cy={hy} r="2.5" fill={color} fillOpacity="0.8" />
             </g>
           );
         })()}

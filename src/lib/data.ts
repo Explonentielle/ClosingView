@@ -1,14 +1,20 @@
-// Fallback to mocks when real data is unavailable (development mode)
-import type { Stat, Client } from '@/types';
-import { statsData as mockStatsData, closingRateData as mockClosingRateData, commissionsData as mockCommissionsData, clients as mockClients } from '@/data/mocks';
+import type { Client } from '@/types';
+import { clients as mockClients } from '@/data/mocks';
 
 /**
  * Aggregates stats data into the format expected by Dashboard KPI cards.
- * Falls back to mock data if real stats are not available.
+ * Uses real stats data from Supabase (with fallback trends if unavailable)
  */
-export function aggregateStatsData(stats: Stat[], range: '7j' | '30j' | '3m' | '1a' = '30j') {
+export function aggregateStatsData(stats: any[], range: '7j' | '30j' | '3m' | '1a' = '30j') {
   if (!stats || stats.length === 0) {
-    return mockStatsData[range];
+    return {
+      cash: '0€',
+      closes: 0,
+      taux: '0%',
+      commissions: '0€',
+      cashTrend: 0,
+      closingTrend: 0,
+    };
   }
 
   // Calculate aggregates from real stats
@@ -27,22 +33,10 @@ export function aggregateStatsData(stats: Stat[], range: '7j' | '30j' | '3m' | '
     closes,
     taux: `${avgTaux}%`,
     commissions: `${commissions.toLocaleString('fr-FR')}€`,
-    cashTrend: stats[0]?.cashTrend ?? mockStatsData[range].cashTrend,
-    closingTrend: stats[0]?.closingTrend ?? mockStatsData[range].closingTrend,
+    cashTrend: stats[0]?.cashTrend ?? 0,
+    closingTrend: stats[0]?.closingTrend ?? 0,
   };
 }
-
-/**
- * Returns chart data, falling back to mocks if unavailable
- */
-export function getChartData(statsCount: number) {
-  return statsCount > 0 ? 'real' : 'mock';
-}
-
-export const defaultChartData = {
-  closingRate: mockClosingRateData,
-  commissions: mockCommissionsData,
-};
 
 /**
  * Adapts client data with UI properties (color, initials, etc.)
