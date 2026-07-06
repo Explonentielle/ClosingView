@@ -52,7 +52,7 @@ const Layout = () => {
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#0EFF9C" }} />
                 SCORE 74
               </div>
-              <ProfileDropdown initials="JD" />
+              <ProfileDropdown />
             </div>
           </header>
 

@@ -4,16 +4,26 @@ import { LogOut, Settings, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/services";
 
-interface ProfileDropdownProps {
-  initials: string;
-}
+const getInitials = (email?: string, fullName?: string): string => {
+  if (fullName) {
+    const parts = fullName.trim().split(' ').filter(Boolean);
+    return parts
+      .slice(0, 2)
+      .map(p => p[0].toUpperCase())
+      .join('');
+  }
+  return (email?.[0] ?? "?").toUpperCase();
+};
 
-export const ProfileDropdown = ({ initials }: ProfileDropdownProps) => {
+export const ProfileDropdown = () => {
   const navigate = useNavigate();
   const { user, signOut: authSignOut } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const photoUrl = user?.user_metadata?.picture;
+  const initials = getInitials(user?.email, user?.user_metadata?.full_name);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -40,11 +50,15 @@ export const ProfileDropdown = ({ initials }: ProfileDropdownProps) => {
       {/* Avatar Button */}
       <button
         onClick={() => setOpen(!open)}
-        className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-[10px] font-bold hover:opacity-80 transition-opacity cursor-pointer"
+        className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-[10px] font-bold hover:opacity-80 transition-opacity cursor-pointer overflow-hidden"
         style={{ background: "linear-gradient(135deg,#0EFF9C,#0a8d5e)", color: "#0D1117" }}
         title={user?.email || "Profile"}
       >
-        {initials}
+        {photoUrl ? (
+          <img src={photoUrl} alt="Avatar" className="w-full h-full object-cover" />
+        ) : (
+          initials
+        )}
       </button>
 
       {/* Dropdown Menu */}

@@ -123,7 +123,7 @@ const Stats = () => {
       </div>
 
       {/* Section 2 — Grid 2 cols */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, height: 230, flexShrink: 0 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, height: 246, flexShrink: 0 }}>
         {/* Left col */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, height: 108 }}>
@@ -132,7 +132,7 @@ const Stats = () => {
             <KpiCell label="Nb. closes" value="7" />
             <KpiCell label="Délai" value="2.3j" />
           </div>
-          <div style={{ height: 114, background: "#161d2e", border: "0.5px solid #2a3a50", borderRadius: 10, padding: "10px 14px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ height: 130, background: "#161d2e", border: "0.5px solid #2a3a50", borderRadius: 10, padding: "10px 14px", display: "flex", flexDirection: "column", overflow: "hidden", gap: 6 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ color: "#6b7a99", fontSize: 7.5, fontWeight: 700, letterSpacing: "1.3px", textTransform: "uppercase" }}>Full Pay vs Split Pay</div>
               <div style={{ color: "#0EFF9C", fontSize: 9, fontWeight: 700 }}>60%</div>
@@ -152,7 +152,7 @@ const Stats = () => {
         </div>
 
         {/* Right col — Close Score */}
-        <div style={{ height: 230, overflow: "hidden", background: "#060b14", border: "1px solid #0EFF9C44", borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "8px 4px" }}>
+        <div style={{ height: 246, overflow: "hidden", background: "#060b14", border: "1px solid #0EFF9C44", borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "8px 4px" }}>
           <div style={{ color: "#0EFF9C", fontSize: 9, fontWeight: 800, letterSpacing: "3.5px" }}>CLOSE SCORE</div>
           <div style={{ width: 28, height: 1, background: "#0EFF9C", opacity: 0.3, marginTop: 2 }} />
           <Radar />
