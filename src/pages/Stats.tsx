@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { getClosingRates, getClosingMetrics } from "@/services";
+import type { ClosingRates } from "@/services";
 
 const FILTERS = ["Global", "Niche", "Infopreneur", "Challenge"];
 
@@ -87,13 +90,29 @@ const Radar = () => {
 import TrackRecordModal from "@/components/stats/TrackRecordModal";
 
 const Stats = () => {
+  const { user } = useAuth();
   const [filter, setFilter] = useState("Global");
   const [trackOpen, setTrackOpen] = useState(false);
-  const rates = {
-    noShow: { v: 12, x: 3, y: 24 },
-    followUp: { v: 17, deals: 4 },
-    closing: { v: 29, x: 7, y: 24 },
-  };
+  const [rates, setRates] = useState<ClosingRates>({ closing: 0, noShow: 0, followUp: 0 });
+  const [metrics, setMetrics] = useState({ totalContracted: 0, totalCollected: 0, count: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchData = async () => {
+      setLoading(true);
+      const [r, m] = await Promise.all([
+        getClosingRates(user.id, 30),
+        getClosingMetrics(user.id, 30),
+      ]);
+      setRates(r);
+      setMetrics(m);
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [user, filter]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%", overflow: "hidden", padding: "12px 14px" }}>
@@ -127,10 +146,10 @@ const Stats = () => {
         {/* Left col */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, height: 108 }}>
-            <KpiCell label="€ contracté" value="12 200€" />
-            <KpiCell label="€ collecté" value="9 800€" valueColor="#0EFF9C" />
-            <KpiCell label="Nb. closes" value="7" />
-            <KpiCell label="Délai" value="2.3j" />
+            <KpiCell label="€ contracté" value={`${metrics.totalContracted.toLocaleString("fr-FR")}€`} />
+            <KpiCell label="€ collecté" value={`${metrics.totalCollected.toLocaleString("fr-FR")}€`} valueColor="#0EFF9C" />
+            <KpiCell label="Nb. closes" value={String(metrics.count)} />
+            <KpiCell label="Délai" value={metrics.count > 0 ? "~2.3j" : "—"} />
           </div>
           <div style={{ height: 130, background: "#161d2e", border: "0.5px solid #2a3a50", borderRadius: 10, padding: "10px 14px", marginTop: "5px", display: "flex", flexDirection: "column", overflow: "hidden", gap: 6 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -163,9 +182,9 @@ const Stats = () => {
       {/* Section 3 — 3 taux */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, height: 90, flexShrink: 0, marginTop: 12 }}>
         {[
-          { label: "Taux no show", value: "12%", sub: "3/24 RDV", color: "#F87171", border: "#F8717133" },
-          { label: "Taux follow up", value: "17%", sub: "4 deals", color: "#EFB027", border: "#EFB02733" },
-          { label: "Taux closing", value: "29%", sub: "7/24 RDV", color: "#0EFF9C", border: "#0EFF9C33" },
+          { label: "Taux no show", value: `${rates.noShow}%`, color: "#F87171", border: "#F8717133" },
+          { label: "Taux follow up", value: `${rates.followUp}%`, color: "#EFB027", border: "#EFB02733" },
+          { label: "Taux closing", value: `${rates.closing}%`, color: "#0EFF9C", border: "#0EFF9C33" },
         ].map((t) => (
           <div key={t.label} style={{ background: "#161d2e", border: `0.5px solid ${t.border}`, borderRadius: 10, padding: "12px 14px", textAlign: "center", height: 90, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
             <div style={{ fontSize: 7.5, color: "#6b7a99", fontWeight: 700, letterSpacing: "1.3px", textTransform: "uppercase", marginBottom: 6 }}>{t.label}</div>
