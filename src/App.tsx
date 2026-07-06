@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 
 // Lazy load pages for code splitting
@@ -39,26 +40,80 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>} />
             <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
             <Route
-              path="/"
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Layout />
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
-              <Route path="clients" element={<Suspense fallback={<PageLoader />}><Clients /></Suspense>} />
-              <Route path="stats" element={<Suspense fallback={<PageLoader />}><Stats /></Suspense>} />
-              <Route path="network" element={<Suspense fallback={<PageLoader />}><Network /></Suspense>} />
-              <Route path="ecosystem" element={<Suspense fallback={<PageLoader />}><Ecosystem /></Suspense>} />
-              <Route path="profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
-              <Route path="settings" element={<Suspense fallback={<PageLoader />}><SettingsView /></Suspense>} />
+              <Route index element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
+            </Route>
+            <Route
+              path="/clients"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><Clients /></Suspense>} />
+            </Route>
+            <Route
+              path="/stats"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><Stats /></Suspense>} />
+            </Route>
+            <Route
+              path="/network"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><Network /></Suspense>} />
+            </Route>
+            <Route
+              path="/ecosystem"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><Ecosystem /></Suspense>} />
+            </Route>
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
+            </Route>
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><SettingsView /></Suspense>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
