@@ -161,7 +161,7 @@ const Stats = () => {
       </div>
 
       {/* Section 3 — 3 taux */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, height: 90, flexShrink: 0 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, height: 90, flexShrink: 0, marginTop: 12 }}>
         {[
           { label: "Taux no show", value: "12%", sub: "3/24 RDV", color: "#F87171", border: "#F8717133" },
           { label: "Taux follow up", value: "17%", sub: "4 deals", color: "#EFB027", border: "#EFB02733" },

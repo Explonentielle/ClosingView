@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { useClientsList } from "@/hooks/useClientsList";
 import { getDefaultClients, adaptClientData } from "@/lib/data";
 import { responsiveClass } from "@/lib/responsive";
@@ -8,6 +9,7 @@ import * as S from './Clients.styles';
 type Offer = { name: string; amount: number; split: number };
 
 const ClientsPage = () => {
+  const { user } = useAuth();
   const { clients: realClients, loading, error, createClient, refetch } = useClientsList();
   const [open, setOpen] = useState(false);
 
@@ -96,8 +98,9 @@ const ClientsPage = () => {
           refetch();
         }}
         onCreate={(c) => {
+          if (!user) return;
           const clientData = {
-            user_id: '',
+            user_id: user.id,
             name: c.name || "Sans nom",
             niche: c.niche,
             types: c.types,
@@ -106,7 +109,6 @@ const ClientsPage = () => {
               amount: o.amount,
               split: o.split,
             })),
-            created_at: new Date().toISOString(),
           };
           createClient(clientData);
           setOpen(false);

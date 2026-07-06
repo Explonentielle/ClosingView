@@ -21,10 +21,11 @@ const Network = () => {
   useEffect(() => {
     const fiveAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     supabase
-      .from("profiles")
+      .from("auth.users")
       .select("id", { count: "exact", head: true })
-      .gte("last_seen", fiveAgo)
-      .then(({ count }) => setOnlineCount(count ?? 0));
+      .gte("last_sign_in_at", fiveAgo)
+      .then(({ count }) => setOnlineCount(count ?? 0))
+      .catch(() => setOnlineCount(0));
   }, [tab]);
 
   return (
