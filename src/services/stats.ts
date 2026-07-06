@@ -71,17 +71,15 @@ export async function getClosingRates(userId: string, days: number = 30): Promis
 
   if (entriesError) {
     console.error('Error fetching daily entries:', entriesError);
-    // Return demo data on error
-    return { closing: 29, noShow: 12, followUp: 17 };
+    return { closing: 0, noShow: 0, followUp: 0 };
   }
 
   const totalRdvs = entries?.reduce((sum, e) => sum + (e.r1_done || 0) + (e.r2_done || 0), 0) || 0;
   const totalCloses = entries?.reduce((sum, e) => sum + (e.closes_count || 0), 0) || 0;
   const followUps = entries?.reduce((sum, e) => sum + (e.r2_done || 0), 0) || 0;
 
-  // If no data exists, return demo data
   if (totalRdvs === 0) {
-    return { closing: 29, noShow: 12, followUp: 17 };
+    return { closing: 0, noShow: 0, followUp: 0 };
   }
 
   return {
@@ -104,22 +102,16 @@ export async function getClosingMetrics(userId: string, days: number = 30) {
 
   if (error) {
     console.error('Error fetching closes:', error);
-    // Return demo data on error
-    return { totalContracted: 12200, totalCollected: 9800, count: 7 };
+    return { totalContracted: 0, totalCollected: 0, count: 0 };
   }
 
   const totalContracted = closes?.reduce((sum, c) => sum + (Number(c.contracted_amount) || 0), 0) || 0;
   const totalCollected = closes?.reduce((sum, c) => sum + (Number(c.collected_amount) || 0), 0) || 0;
 
-  // If no data exists, return demo data
-  if (!closes || closes.length === 0) {
-    return { totalContracted: 12200, totalCollected: 9800, count: 7 };
-  }
-
   return {
     totalContracted,
     totalCollected,
-    count: closes.length,
+    count: closes?.length || 0,
   };
 }
 
@@ -137,23 +129,11 @@ export async function getChartData(userId: string, days: number = 30) {
 
   if (error) {
     console.error('Error fetching chart data:', error);
-    // Return demo data if there's an error
-    return {
-      closingRateData: [2, 3, 1, 4, 2, 5, 3, 4, 2, 3],
-      commissionsData: [3000, 4500, 1500, 6000, 3000, 7500, 4500, 6000, 3000, 4500]
-    };
+    return { closingRateData: [], commissionsData: [] };
   }
 
   const closingRateData = entries?.map(e => e.closes_count || 0) || [];
   const commissionsData = entries?.map(e => (e.closes_count || 0) * 1500) || [];
-
-  // If no data exists, return demo data so charts aren't empty
-  if (closingRateData.length === 0) {
-    return {
-      closingRateData: [2, 3, 1, 4, 2, 5, 3, 4, 2, 3],
-      commissionsData: [3000, 4500, 1500, 6000, 3000, 7500, 4500, 6000, 3000, 4500]
-    };
-  }
 
   return { closingRateData, commissionsData };
 }

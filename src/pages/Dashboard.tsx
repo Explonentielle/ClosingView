@@ -128,6 +128,17 @@ const Dashboard = () => {
             <div className="p-4 text-center text-blue-400">Chargement des graphiques...</div>
             <div className="p-4 text-center text-blue-400">Chargement des graphiques...</div>
           </>
+        ) : chartData.closingRateData.length === 0 ? (
+          <>
+            <div className="p-12 text-center rounded-[12px]" style={{ background: "#0a0f1a", borderColor: "#2a3a50", border: "1px solid #2a3a50" }}>
+              <p style={{ color: "#8892a0", fontSize: "14px" }}>Aucune donnée pour le moment</p>
+              <p style={{ color: "#6b7a99", fontSize: "12px", marginTop: "4px" }}>Saisissez une journée pour voir les graphiques</p>
+            </div>
+            <div className="p-12 text-center rounded-[12px]" style={{ background: "#0a0f1a", borderColor: "#2a3a50", border: "1px solid #2a3a50" }}>
+              <p style={{ color: "#8892a0", fontSize: "14px" }}>Aucune donnée pour le moment</p>
+              <p style={{ color: "#6b7a99", fontSize: "12px", marginTop: "4px" }}>Saisissez une journée pour voir les graphiques</p>
+            </div>
+          </>
         ) : (
           <>
             <InteractiveChart
