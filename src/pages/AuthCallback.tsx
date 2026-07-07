@@ -18,22 +18,33 @@ const AuthCallback = () => {
         const expiresIn = hashParams.get("expires_in");
 
         if (!accessToken) {
-          navigate("/dashboard");
+          navigate("/login");
           return;
         }
 
         // Définir la session avec le token
-        if (refreshToken && expiresIn) {
-          await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
+        const sessionData: any = {
+          access_token: accessToken,
+        };
+
+        if (refreshToken) {
+          sessionData.refresh_token = refreshToken;
+        }
+
+        try {
+          await supabase.auth.setSession(sessionData);
+        } catch (sessionErr) {
+          console.error("Could not set session:", sessionErr);
+          // Continue anyway - token might still be valid
         }
 
         // Rediriger selon le type de token
         if (type === "recovery") {
           // C'est un lien de reset password
           navigate(`/reset-password?access_token=${accessToken}`);
+        } else if (type === "signup" || type === "email_change") {
+          // Après inscription ou changement d'email, aller au dashboard
+          navigate("/dashboard");
         } else if (type === "invite") {
           navigate("/dashboard");
         } else {
