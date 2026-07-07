@@ -22,14 +22,24 @@ const ClientsPage = () => {
   const displayClients = realClients.length > 0 ? realClients : getDefaultClients();
   const list = displayClients.map(adaptClientData);
 
-  const toggleClientExpand = async (clientId: string) => {
-    setExpandedClients(prev => ({ ...prev, [clientId]: !prev[clientId] }));
+  // Fetch all client offers on mount and when clients change
+  useEffect(() => {
+    const fetchAllOffers = async () => {
+      const offersMap: Record<string, any[]> = {};
+      for (const client of list) {
+        const offers = await getClientOffers(client.id);
+        offersMap[client.id] = offers;
+      }
+      setClientOffers(offersMap);
+    };
 
-    // Fetch offers if not already fetched
-    if (!clientOffers[clientId] && expandedClients[clientId] === undefined) {
-      const offers = await getClientOffers(clientId);
-      setClientOffers(prev => ({ ...prev, [clientId]: offers }));
+    if (list.length > 0) {
+      fetchAllOffers();
     }
+  }, [list]);
+
+  const toggleClientExpand = (clientId: string) => {
+    setExpandedClients(prev => ({ ...prev, [clientId]: !prev[clientId] }));
   };
 
   return (
