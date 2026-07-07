@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import * as S from './OnboardingFlow.styles';
+import { COLORS } from './OnboardingFlow.styles';
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
 

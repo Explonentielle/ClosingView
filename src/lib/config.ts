@@ -15,9 +15,9 @@ export const getAuthRedirectUrl = (path: string = '/dashboard'): string => {
 
 export const getResetPasswordUrl = (): string => {
   if (import.meta.env.DEV) {
-    return `${window.location.origin}/reset-password`;
+    return `${window.location.origin}/auth/callback`;
   }
-  return `${window.location.origin}/reset-password`;
+  return `${window.location.origin}/auth/callback`;
 };
 
 export const getGoogleRedirectUrl = (): string => {

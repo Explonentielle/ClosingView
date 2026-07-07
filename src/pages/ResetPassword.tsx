@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import { updatePassword } from "@/services";
+import { supabase } from "@/integrations/supabase/client";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -15,11 +17,24 @@ const ResetPassword = () => {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    const token = searchParams.get("token");
-    if (!token) {
+    // Supabase envoie access_token dans le hash fragment
+    const hashParams = new URLSearchParams(location.hash.substring(1));
+    const accessToken = hashParams.get("access_token");
+
+    // Ou en query parameter
+    const queryToken = searchParams.get("access_token");
+    const token = accessToken || queryToken;
+
+    if (token) {
+      // Définir la session avec le token reçu
+      supabase.auth.setSession({
+        access_token: token,
+        refresh_token: hashParams.get("refresh_token") || "",
+      });
+    } else {
       setError("Lien de réinitialisation invalide ou expiré.");
     }
-  }, [searchParams]);
+  }, [searchParams, location.hash]);
 
   const validatePassword = (pwd: string) => {
     if (pwd.length < 8) return "Au minimum 8 caractères";
