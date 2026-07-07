@@ -39,7 +39,12 @@ const ClientsPage = () => {
   }, [list]);
 
   const toggleClientExpand = (clientId: string) => {
-    setExpandedClients(prev => ({ ...prev, [clientId]: !prev[clientId] }));
+    console.log('Toggle expand for client:', clientId, 'current state:', expandedClients);
+    setExpandedClients(prev => {
+      const newState = { ...prev, [clientId]: !prev[clientId] };
+      console.log('New expanded state:', newState);
+      return newState;
+    });
   };
 
   return (
@@ -78,6 +83,7 @@ const ClientsPage = () => {
               const offers = clientOffers[c.id] || [];
               const offerCount = offers.length;
               const totalOffers = offers.reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+              console.log(`Client ${c.name} (${c.id}):`, { isExpanded, expandedClients });
 
               return (
                 <div
