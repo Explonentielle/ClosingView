@@ -43,7 +43,7 @@ const Radar = () => {
     { label: "Cycle de vente", v: 73, ang: 126 },
     { label: "Objectifs", v: 70, ang: 198 },
   ];
-  const R = 50;
+  const R = 65;
   const toXY = (ang: number, r: number) => {
     const a = (ang * Math.PI) / 180;
     return [Math.cos(a) * r, Math.sin(a) * r] as const;
@@ -52,14 +52,14 @@ const Radar = () => {
   const data = pts.map((p) => toXY(p.ang, (R * p.v) / 100).join(",")).join(" ");
 
   return (
-    <svg viewBox="0 0 260 160" preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "auto", maxHeight: "120px" }}>
+    <svg viewBox="0 0 280 180" preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "auto", maxHeight: "160px" }}>
       <defs>
         <radialGradient id="radarFill" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#0EFF9C" stopOpacity="0.4" />
           <stop offset="100%" stopColor="#0EFF9C" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <g transform="translate(130 80)">
+      <g transform="translate(140 90)">
         {[R, R * 0.75, R * 0.5].map((r, i) => (
           <polygon key={i} points={ring(r)} fill="none" stroke="#1e2b3a" strokeWidth={0.8} />
         ))}
@@ -73,15 +73,15 @@ const Radar = () => {
           return <circle key={i} cx={x} cy={y} r={4} fill="#0EFF9C" />;
         })}
         {pts.map((p, i) => {
-          const [lx, ly] = toXY(p.ang, R + 12);
+          const [lx, ly] = toXY(p.ang, R + 15);
           return (
             <g key={i}>
-              <text x={lx} y={ly - 2} textAnchor="middle" fontSize={7} fontWeight={600} fill="#e2e8f0">{p.label}</text>
-              <text x={lx} y={ly + 6} textAnchor="middle" fontSize={6} fontWeight={600} fill="#0EFF9C">{p.v}%</text>
+              <text x={lx} y={ly - 2} textAnchor="middle" fontSize={7.5} fontWeight={600} fill="#e2e8f0">{p.label}</text>
+              <text x={lx} y={ly + 6} textAnchor="middle" fontSize={7} fontWeight={600} fill="#0EFF9C">{p.v}%</text>
             </g>
           );
         })}
-        <text textAnchor="middle" dominantBaseline="middle" fill="#0EFF9C" fontSize={20} fontWeight={900} fontFamily="Inter, sans-serif">74</text>
+        <text textAnchor="middle" dominantBaseline="middle" fill="#0EFF9C" fontSize={24} fontWeight={900} fontFamily="Inter, sans-serif">74</text>
       </g>
     </svg>
   );
