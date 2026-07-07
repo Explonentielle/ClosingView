@@ -142,6 +142,9 @@ export async function getChartData(userId: string, days: number = 30) {
   const closingRateData = Object.values(byDate);
   const commissionsData = closingRateData.map(v => v * 1500);
 
+  console.log('Grouped chart data by date:', byDate);
+  console.log('Final chart arrays:', { closingRateData, commissionsData });
+
   return { closingRateData, commissionsData };
 }
 

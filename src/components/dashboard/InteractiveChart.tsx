@@ -33,11 +33,17 @@ const W = 560, H = 200, P = { l: 16, r: 16, t: 18, b: 28 };
 const InteractiveChart = ({ title, data, color, badgeFormatter, monthLabels, activeMonthIndex, formatY }: Props) => {
   const [hover, setHover] = useState<number | null>(null);
 
+  console.log(`InteractiveChart "${title}" received data:`, data);
+
   const { points, avg } = useMemo(() => {
-    if (data.length === 0) return { points: [], avg: 0 };
+    if (data.length === 0) {
+      console.log(`Chart "${title}" has no data`);
+      return { points: [], avg: 0 };
+    }
     const min = Math.min(...data);
     const max = Math.max(...data);
     const range = max - min || 1;
+    console.log(`Chart "${title}" - min: ${min}, max: ${max}, range: ${range}`);
     const stepX = (W - P.l - P.r) / Math.max(data.length - 1, 1);
     const ys = data.map(v => P.t + (H - P.t - P.b) * (1 - (v - min) / range));
     const xs = data.map((_, i) => P.l + i * stepX);
