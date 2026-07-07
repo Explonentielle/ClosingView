@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { getClosingRates, getClosingMetrics } from "@/services";
+import { getClosingRates, getClosingMetrics, getSummaryStats, getFullPayRatio } from "@/services";
 import type { ClosingRates } from "@/services";
 
 const FILTERS = ["Global", "Niche", "Infopreneur", "Challenge"];
@@ -96,6 +96,8 @@ const Stats = () => {
   const [trackOpen, setTrackOpen] = useState(false);
   const [rates, setRates] = useState<ClosingRates>({ closing: 0, noShow: 0, followUp: 0 });
   const [metrics, setMetrics] = useState({ totalContracted: 0, totalCollected: 0, count: 0 });
+  const [summary, setSummary] = useState({ closes: 0, r1Done: 0, r2Done: 0, followUp: 0 });
+  const [fullPayRatio, setFullPayRatio] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -103,12 +105,16 @@ const Stats = () => {
 
     const fetchData = async () => {
       setLoading(true);
-      const [r, m] = await Promise.all([
+      const [r, m, s, f] = await Promise.all([
         getClosingRates(user.id, 30),
         getClosingMetrics(user.id, 30),
+        getSummaryStats(user.id, 30),
+        getFullPayRatio(user.id, 30),
       ]);
       setRates(r);
       setMetrics(m);
+      setSummary(s);
+      setFullPayRatio(f);
       setLoading(false);
     };
 
@@ -146,17 +152,17 @@ const Stats = () => {
           <div className={S.gaugeSection}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ color: "#6b7a99", fontSize: "0.625rem", fontWeight: 700, letterSpacing: "1.3px", textTransform: "uppercase" }}>Full Pay vs Split Pay</div>
-              <div style={{ color: "#0EFF9C", fontSize: "0.75rem", fontWeight: 700 }}>60%</div>
+              <div style={{ color: "#0EFF9C", fontSize: "0.75rem", fontWeight: 700 }}>{fullPayRatio}%</div>
             </div>
             <div style={{ flex: 1, minHeight: 0, display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <Gauge pct={60} />
+              <Gauge pct={fullPayRatio} />
             </div>
             <div style={{ display: "flex", justifyContent: "center", gap: 2 , fontSize: "0.7rem", color: "#6b7a99", flexWrap: "wrap" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
-                <span style={{ width: 4, height: 4, borderRadius: 999, background: "#0EFF9C" }} /> Full Pay 60%
+                <span style={{ width: 4, height: 4, borderRadius: 999, background: "#0EFF9C" }} /> Full Pay {fullPayRatio}%
               </span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
-                <span style={{ width: 4, height: 4, borderRadius: 999, background: "#EFB027" }} /> Split Pay 40%
+                <span style={{ width: 4, height: 4, borderRadius: 999, background: "#EFB027" }} /> Split Pay {100 - fullPayRatio}%
               </span>
             </div>
           </div>
@@ -191,10 +197,10 @@ const Stats = () => {
       {/* Section 4 — Résumé */}
       <div className={S.summaryGrid}>
         {[
-          { label: "Closes", value: "7", color: "#0EFF9C", bar: "linear-gradient(90deg, #0EFF9C, #0EFF9C44)" },
-          { label: "R1 effectués", value: "24", color: "#FFFFFF", bar: "#2a3a50" },
-          { label: "R2 effectués", value: "11", color: "#FFFFFF", bar: "#2a3a50" },
-          { label: "Follow up", value: "4", color: "#EFB027", bar: "linear-gradient(90deg, #EFB027, #EFB02744)" },
+          { label: "Closes", value: String(summary.closes), color: "#0EFF9C", bar: "linear-gradient(90deg, #0EFF9C, #0EFF9C44)" },
+          { label: "R1 effectués", value: String(summary.r1Done), color: "#FFFFFF", bar: "#2a3a50" },
+          { label: "R2 effectués", value: String(summary.r2Done), color: "#FFFFFF", bar: "#2a3a50" },
+          { label: "Follow up", value: String(summary.followUp), color: "#EFB027", bar: "linear-gradient(90deg, #EFB027, #EFB02744)" },
         ].map((c, i) => (
           <div key={c.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "8px 4px", borderRight: i < 3 ? "0.5px solid #1e2530" : "none" }}>
             <div style={{ fontSize: "0.65rem", color: "#6b7a99", letterSpacing: "0.5px", marginBottom: 3, textTransform: "uppercase", fontWeight: 700 }}>{c.label}</div>

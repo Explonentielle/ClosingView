@@ -7,9 +7,7 @@ import DatePickerFilter from "@/components/dashboard/DatePickerFilter";
 import StreakBanner from "@/components/dashboard/StreakBanner";
 import { Range, monthLabels } from "@/data/mocks";
 import { useAuth } from "@/hooks/useAuth";
-import { useUserStats } from "@/hooks/useUserStats";
-import { getChartData } from "@/services";
-import { aggregateStatsData } from "@/lib/data";
+import { getChartData, getDashboardStats } from "@/services";
 import { responsiveClass } from "@/lib/responsive";
 import * as S from './Dashboard.styles';
 
@@ -21,8 +19,8 @@ const Dashboard = () => {
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const isCustom = !!(customRange?.from && customRange?.to);
 
-  const { stats, loading, error } = useUserStats();
-  const d = aggregateStatsData(stats, range);
+  const [d, setD] = useState({ closes: 0, taux: '0%', cash: '0€', commissions: '0€', cashTrend: 0, closingTrend: 0 });
+  const [loading, setLoading] = useState(true);
 
   const [chartData, setChartData] = useState({ closingRateData: [] as number[], commissionsData: [] as number[] });
   const [chartsLoading, setChartsLoading] = useState(true);
@@ -30,14 +28,29 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
 
-    const fetchChartData = async () => {
-      setChartsLoading(true);
-      const data = await getChartData(user.id, 30);
-      setChartData(data);
+    const fetchData = async () => {
+      setLoading(true);
+
+      // Fetch dashboard KPI stats
+      const stats = await getDashboardStats(user.id, 30);
+      setD({
+        closes: stats.closes,
+        taux: `${stats.taux}%`,
+        cash: `${stats.cash.toLocaleString('fr-FR')}€`,
+        commissions: `${stats.commissions.toLocaleString('fr-FR')}€`,
+        cashTrend: stats.cashTrend,
+        closingTrend: stats.closingTrend,
+      });
+
+      // Fetch chart data
+      const chartDataResult = await getChartData(user.id, 30);
+      setChartData(chartDataResult);
       setChartsLoading(false);
+
+      setLoading(false);
     };
 
-    fetchChartData();
+    fetchData();
   }, [user]);
 
   const commAvg = useMemo(() => {
@@ -54,13 +67,6 @@ const Dashboard = () => {
     return prev > 0 ? Math.round(((recent - prev) / prev) * 100) : 0;
   }, [chartData]);
 
-  if (error) {
-    return (
-      <div className="animate-fade-in max-w-[1280px] p-4 rounded-lg bg-red-500/10 border border-red-500/50">
-        <p className="text-red-400">Erreur lors du chargement des stats: {error}</p>
-      </div>
-    );
-  }
 
   return (
     <div className={`animate-fade-in space-y-5 ${responsiveClass.mainContainer}`}>

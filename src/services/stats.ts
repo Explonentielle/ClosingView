@@ -137,3 +137,89 @@ export async function getChartData(userId: string, days: number = 30) {
 
   return { closingRateData, commissionsData };
 }
+
+export async function getDashboardStats(userId: string, days: number = 30) {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  const startDateStr = startDate.toISOString().split('T')[0];
+
+  // Fetch daily entries
+  const { data: entries } = await supabase
+    .from('daily_entries')
+    .select('closes_count, r1_done, r2_done')
+    .eq('user_id', userId)
+    .gte('entry_date', startDateStr);
+
+  // Fetch closes for cash
+  const { data: closes } = await supabase
+    .from('closes')
+    .select('contracted_amount')
+    .eq('user_id', userId)
+    .gte('close_date', startDateStr);
+
+  const entriesArr = entries || [];
+  const closesArr = closes || [];
+
+  const totalCloses = entriesArr.reduce((sum, e) => sum + (e.closes_count || 0), 0);
+  const totalRdvs = entriesArr.reduce((sum, e) => sum + ((e.r1_done || 0) + (e.r2_done || 0)), 0);
+  const totalCash = closesArr.reduce((sum, c) => sum + (Number(c.contracted_amount) || 0), 0);
+  const commissions = Math.round(totalCash * 0.20);
+
+  return {
+    closes: totalCloses,
+    taux: totalRdvs > 0 ? Math.round((totalCloses / totalRdvs) * 100) : 0,
+    cash: totalCash,
+    commissions,
+    cashTrend: 0,
+    closingTrend: 0,
+  };
+}
+
+export async function getSummaryStats(userId: string, days: number = 30) {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  const startDateStr = startDate.toISOString().split('T')[0];
+
+  const { data: entries } = await supabase
+    .from('daily_entries')
+    .select('closes_count, r1_done, r2_done, r1_planned')
+    .eq('user_id', userId)
+    .gte('entry_date', startDateStr);
+
+  const entriesArr = entries || [];
+
+  const totalCloses = entriesArr.reduce((sum, e) => sum + (e.closes_count || 0), 0);
+  const totalR1 = entriesArr.reduce((sum, e) => sum + (e.r1_done || 0), 0);
+  const totalR2 = entriesArr.reduce((sum, e) => sum + (e.r2_done || 0), 0);
+  const totalFollowUp = entriesArr.filter(e => (e.r2_done || 0) > 0).length;
+
+  return {
+    closes: totalCloses,
+    r1Done: totalR1,
+    r2Done: totalR2,
+    followUp: totalFollowUp,
+  };
+}
+
+export async function getFullPayRatio(userId: string, days: number = 30) {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  const startDateStr = startDate.toISOString().split('T')[0];
+
+  const { data: closes } = await supabase
+    .from('closes')
+    .select('contracted_amount, collected_amount')
+    .eq('user_id', userId)
+    .gte('close_date', startDateStr);
+
+  const closesArr = closes || [];
+  if (closesArr.length === 0) return 0;
+
+  const fullPay = closesArr.filter(c => {
+    const contracted = Number(c.contracted_amount) || 0;
+    const collected = Number(c.collected_amount) || 0;
+    return contracted > 0 && Math.abs(contracted - collected) < 1; // Allow 1€ difference for rounding
+  }).length;
+
+  return Math.round((fullPay / closesArr.length) * 100);
+}
