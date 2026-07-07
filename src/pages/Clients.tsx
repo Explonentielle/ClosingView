@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useClientsList } from "@/hooks/useClientsList";
 import { getDefaultClients, adaptClientData } from "@/lib/data";
+import { getClientOffers } from "@/services/clients";
 import { responsiveClass } from "@/lib/responsive";
 import { ClientModal } from "@/components/modals/ClientModal";
 import ClientCardLoader from "@/components/loaders/ClientCardLoader";
@@ -13,10 +15,22 @@ const ClientsPage = () => {
   const { user } = useAuth();
   const { clients: realClients, loading, error, createClient, refetch } = useClientsList();
   const [open, setOpen] = useState(false);
+  const [expandedClients, setExpandedClients] = useState<Record<string, boolean>>({});
+  const [clientOffers, setClientOffers] = useState<Record<string, any[]>>({});
 
   // Use real clients if available, otherwise use mock data
   const displayClients = realClients.length > 0 ? realClients : getDefaultClients();
   const list = displayClients.map(adaptClientData);
+
+  const toggleClientExpand = async (clientId: string) => {
+    setExpandedClients(prev => ({ ...prev, [clientId]: !prev[clientId] }));
+
+    // Fetch offers if not already fetched
+    if (!clientOffers[clientId] && expandedClients[clientId] === undefined) {
+      const offers = await getClientOffers(clientId);
+      setClientOffers(prev => ({ ...prev, [clientId]: offers }));
+    }
+  };
 
   return (
     <div className={`animate-fade-in space-y-5 ${responsiveClass.mainContainer}`}>
@@ -50,6 +64,11 @@ const ClientsPage = () => {
             {list.map((c) => {
               const pillColors: Record<string, string> = { Challenge: "#3B82F6", VSL: "#9B7FE8" };
               const nicheColor = c.color;
+              const isExpanded = expandedClients[c.id] ?? false;
+              const offers = clientOffers[c.id] || [];
+              const offerCount = offers.length;
+              const totalOffers = offers.reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+
               return (
                 <div
                   key={c.id}
@@ -85,10 +104,34 @@ const ClientsPage = () => {
                     <span className="text-[12px] sm:text-[14px] font-bold" style={{ color: "#0EFF9C" }}>
                       {c.amount.toLocaleString("fr-FR")}€
                     </span>
-                    <span className="text-[8px] sm:text-[10px]" style={{ color: "#8892a0" }}>
-                      {c.offers} offre{c.offers > 1 ? "s" : ""}
-                    </span>
+                    <button
+                      onClick={() => toggleClientExpand(c.id)}
+                      className="flex items-center gap-1.5 text-[8px] sm:text-[10px] transition-transform"
+                      style={{ color: "#8892a0" }}
+                    >
+                      <ChevronDown size={12} style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 200ms" }} />
+                      {offerCount} offre{offerCount > 1 ? "s" : ""}
+                    </button>
                   </div>
+
+                  {isExpanded && offers.length > 0 && (
+                    <div className="space-y-1.5 pt-2 border-t-[0.5px]" style={{ borderColor: "#2a3a50" }}>
+                      {offers.map((offer) => (
+                        <div key={offer.id} className="flex items-center justify-between px-2 py-1.5 rounded-[6px]" style={{ background: "#0a0f1a" }}>
+                          <span className="text-[9px] sm:text-[10px] text-white">{offer.name}</span>
+                          <span className="text-[9px] sm:text-[10px] font-bold" style={{ color: "#0EFF9C" }}>
+                            {Number(offer.amount).toLocaleString("fr-FR")}€
+                          </span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between px-2 py-1.5 border-t-[0.5px] mt-1.5" style={{ borderColor: "#1a2232" }}>
+                        <span className="text-[9px] sm:text-[10px] font-bold" style={{ color: "#8892a0" }}>TOTAL</span>
+                        <span className="text-[10px] sm:text-[11px] font-bold" style={{ color: "#0EFF9C" }}>
+                          {totalOffers.toLocaleString("fr-FR")}€
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

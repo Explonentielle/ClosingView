@@ -89,3 +89,18 @@ export async function deleteClient(id: string): Promise<boolean> {
 
   return true;
 }
+
+export async function getClientOffers(clientId: string): Promise<Offer[]> {
+  const { data, error } = await supabase
+    .from('offers')
+    .select('*')
+    .eq('client_id', clientId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching client offers:', error.message);
+    return [];
+  }
+
+  return data ?? [];
+}
