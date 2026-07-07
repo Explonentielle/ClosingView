@@ -34,10 +34,11 @@ const InteractiveChart = ({ title, data, color, badgeFormatter, monthLabels, act
   const [hover, setHover] = useState<number | null>(null);
 
   const { points, avg } = useMemo(() => {
+    if (data.length === 0) return { points: [], avg: 0 };
     const min = Math.min(...data);
     const max = Math.max(...data);
     const range = max - min || 1;
-    const stepX = (W - P.l - P.r) / (data.length - 1);
+    const stepX = (W - P.l - P.r) / Math.max(data.length - 1, 1);
     const ys = data.map(v => P.t + (H - P.t - P.b) * (1 - (v - min) / range));
     const xs = data.map((_, i) => P.l + i * stepX);
     const pts = xs.map((x, i) => [x, ys[i]] as [number, number]);
@@ -49,6 +50,7 @@ const InteractiveChart = ({ title, data, color, badgeFormatter, monthLabels, act
   const areaPath = `${path} L ${points[points.length - 1][0]} ${H - P.b} L ${points[0][0]} ${H - P.b} Z`;
 
   const refY = useMemo(() => {
+    if (data.length === 0) return H - P.b;
     const min = Math.min(...data), max = Math.max(...data);
     const range = max - min || 1;
     return P.t + (H - P.t - P.b) * (1 - (avg - min) / range);
