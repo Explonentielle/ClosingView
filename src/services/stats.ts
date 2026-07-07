@@ -120,8 +120,6 @@ export async function getChartData(userId: string, days: number = 30) {
   startDate.setDate(startDate.getDate() - days);
   const startDateStr = startDate.toISOString().split('T')[0];
 
-  console.log('Fetching chart data for user:', userId, 'from', startDateStr);
-
   const { data: entries, error } = await supabase
     .from('daily_entries')
     .select('entry_date, closes_count')
@@ -134,12 +132,15 @@ export async function getChartData(userId: string, days: number = 30) {
     return { closingRateData: [], commissionsData: [] };
   }
 
-  console.log('Chart entries:', entries);
+  // Group by date and sum closes_count for duplicate dates
+  const byDate: Record<string, number> = {};
+  entries?.forEach(e => {
+    const date = e.entry_date;
+    byDate[date] = (byDate[date] || 0) + (e.closes_count || 0);
+  });
 
-  const closingRateData = entries?.map(e => e.closes_count || 0) || [];
-  const commissionsData = entries?.map(e => (e.closes_count || 0) * 1500) || [];
-
-  console.log('Chart data:', { closingRateData, commissionsData });
+  const closingRateData = Object.values(byDate);
+  const commissionsData = closingRateData.map(v => v * 1500);
 
   return { closingRateData, commissionsData };
 }
