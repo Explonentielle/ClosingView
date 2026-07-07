@@ -509,8 +509,8 @@ const OnboardingFlow = () => {
                     Tes stats se mettent à jour automatiquement.
                   </div>
                   <button
-                    className={primaryBtn}
-                    style={primaryStyle}
+                    className={S.button()}
+                    style={S.buttonStyle(S.COLORS.green)}
                     onClick={() => {
                       setEntrySaved(false);
                       goTo(4);
