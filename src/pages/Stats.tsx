@@ -43,7 +43,7 @@ const Radar = () => {
     { label: "Cycle de vente", v: 73, ang: 126 },
     { label: "Objectifs", v: 70, ang: 198 },
   ];
-  const R = 85;
+  const R = 95;
   const toXY = (ang: number, r: number) => {
     const a = (ang * Math.PI) / 180;
     return [Math.cos(a) * r, Math.sin(a) * r] as const;
@@ -52,14 +52,14 @@ const Radar = () => {
   const data = pts.map((p) => toXY(p.ang, (R * p.v) / 100).join(",")).join(" ");
 
   return (
-    <svg viewBox="0 0 340 240" preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "auto", maxHeight: "220px" }}>
+    <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "auto", maxHeight: "260px" }}>
       <defs>
         <radialGradient id="radarFill" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#0EFF9C" stopOpacity="0.4" />
           <stop offset="100%" stopColor="#0EFF9C" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <g transform="translate(170 120)">
+      <g transform="translate(190 140)">
         {[R, R * 0.75, R * 0.5].map((r, i) => (
           <polygon key={i} points={ring(r)} fill="none" stroke="#1e2b3a" strokeWidth={0.8} />
         ))}
