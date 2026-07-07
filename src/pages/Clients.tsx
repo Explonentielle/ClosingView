@@ -102,7 +102,7 @@ const ClientsPage = () => {
 
                   <div className="flex items-center justify-between border-t-[0.5px] pt-2 sm:pt-3" style={{ borderColor: "#2a3a50" }}>
                     <span className="text-[12px] sm:text-[14px] font-bold" style={{ color: "#0EFF9C" }}>
-                      {c.amount.toLocaleString("fr-FR")}€
+                      {totalOffers.toLocaleString("fr-FR")}€
                     </span>
                     <button
                       onClick={() => toggleClientExpand(c.id)}
@@ -124,12 +124,6 @@ const ClientsPage = () => {
                           </span>
                         </div>
                       ))}
-                      <div className="flex items-center justify-between px-2 py-1.5 border-t-[0.5px] mt-1.5" style={{ borderColor: "#1a2232" }}>
-                        <span className="text-[9px] sm:text-[10px] font-bold" style={{ color: "#8892a0" }}>TOTAL</span>
-                        <span className="text-[10px] sm:text-[11px] font-bold" style={{ color: "#0EFF9C" }}>
-                          {totalOffers.toLocaleString("fr-FR")}€
-                        </span>
-                      </div>
                     </div>
                   )}
                 </div>
