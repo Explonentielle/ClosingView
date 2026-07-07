@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { getAuthRedirectUrl } from "@/lib/config";
 
 const strength = (p: string) => {
   let s = 0;
@@ -40,7 +41,7 @@ const Register = () => {
     const { error } = await supabase.auth.signUp({
       email, password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: getAuthRedirectUrl("/auth/callback"),
         data: { first_name: firstName, last_name: lastName },
       },
     });
@@ -52,7 +53,7 @@ const Register = () => {
   const google = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin }
+      options: { redirectTo: getAuthRedirectUrl("/auth/callback") }
     });
     if (error) setErr(error.message);
   };
