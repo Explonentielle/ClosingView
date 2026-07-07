@@ -47,7 +47,7 @@ const InteractiveChart = ({ title, data, color, badgeFormatter, monthLabels, act
   }, [data]);
 
   const path = useMemo(() => smoothPath(points), [points]);
-  const areaPath = `${path} L ${points[points.length - 1][0]} ${H - P.b} L ${points[0][0]} ${H - P.b} Z`;
+  const areaPath = path ? `${path} L ${points[points.length - 1][0]} ${H - P.b} L ${points[0][0]} ${H - P.b} Z` : "";
 
   const refY = useMemo(() => {
     if (data.length === 0) return H - P.b;
