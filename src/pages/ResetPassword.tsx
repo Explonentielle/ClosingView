@@ -15,25 +15,45 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
-    // Supabase envoie access_token dans le hash fragment
-    const hashParams = new URLSearchParams(location.hash.substring(1));
-    const accessToken = hashParams.get("access_token");
+    const setupSession = async () => {
+      try {
+        // Supabase envoie access_token dans le hash fragment
+        const hashParams = new URLSearchParams(location.hash.substring(1));
+        const accessToken = hashParams.get("access_token");
 
-    // Ou en query parameter
-    const queryToken = searchParams.get("access_token");
-    const token = accessToken || queryToken;
+        // Ou en query parameter
+        const queryToken = searchParams.get("access_token");
+        const token = accessToken || queryToken;
+        const refreshToken = hashParams.get("refresh_token") || "";
 
-    if (token) {
-      // Définir la session avec le token reçu
-      supabase.auth.setSession({
-        access_token: token,
-        refresh_token: hashParams.get("refresh_token") || "",
-      });
-    } else {
-      setError("Lien de réinitialisation invalide ou expiré.");
-    }
+        if (!token) {
+          setError("Lien de réinitialisation invalide ou expiré.");
+          return;
+        }
+
+        // Définir la session avec le token reçu
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: token,
+          refresh_token: refreshToken,
+        });
+
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          setError("Erreur lors de l'établissement de la session. Veuillez réessayer.");
+          return;
+        }
+
+        setSessionReady(true);
+      } catch (err) {
+        console.error("Setup session error:", err);
+        setError("Erreur lors du traitement du lien.");
+      }
+    };
+
+    setupSession();
   }, [searchParams, location.hash]);
 
   const validatePassword = (pwd: string) => {
@@ -46,6 +66,11 @@ const ResetPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!sessionReady) {
+      setError("Session non établie. Veuillez actualiser la page.");
+      return;
+    }
 
     if (!password || !confirmPassword) {
       setError("Tous les champs sont requis");
@@ -69,7 +94,7 @@ const ResetPassword = () => {
 
     if (success) {
       setSuccess(true);
-      setTimeout(() => navigate("/dashboard"), 3000);
+      setTimeout(() => navigate("/login"), 3000);
     } else {
       setError("Erreur lors de la mise à jour du mot de passe. Veuillez réessayer.");
     }
@@ -154,15 +179,16 @@ const ResetPassword = () => {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !sessionReady}
                 className="w-full h-10 rounded-[8px] font-bold text-[12px] transition-all active:scale-[0.98]"
                 style={{
                   background: "#0EFF9C",
                   color: "#0D1117",
-                  opacity: loading ? 0.6 : 1,
+                  opacity: loading || !sessionReady ? 0.6 : 1,
+                  cursor: !sessionReady ? "not-allowed" : "pointer",
                 }}
               >
-                {loading ? "Mise à jour..." : "Réinitialiser le mot de passe"}
+                {loading ? "Mise à jour..." : sessionReady ? "Réinitialiser le mot de passe" : "Chargement..."}
               </button>
             </form>
           </>
