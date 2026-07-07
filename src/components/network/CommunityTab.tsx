@@ -143,9 +143,9 @@ const CommunityTab = () => {
   };
 
   return (
-    <div className="grid gap-4" style={{ gridTemplateColumns: "1fr 240px" }}>
+    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-[1fr_240px]">
       {/* Feed */}
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         {/* Composer */}
         <div className="rounded-[10px] border-hair p-3" style={{ background: "#161d2e", borderColor: "#2a3a50" }}>
           <div className="flex gap-3">
@@ -234,7 +234,7 @@ const CommunityTab = () => {
       </div>
 
       {/* Sidebar */}
-      <aside className="space-y-3">
+      <aside className="hidden sm:block space-y-3">
         {/* Me */}
         <div className="rounded-[10px] border-hair p-3" style={{ background: "#161d2e", borderColor: "#2a3a50" }}>
           <div className="flex items-center gap-2.5">
