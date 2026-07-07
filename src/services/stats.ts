@@ -120,6 +120,8 @@ export async function getChartData(userId: string, days: number = 30) {
   startDate.setDate(startDate.getDate() - days);
   const startDateStr = startDate.toISOString().split('T')[0];
 
+  console.log('Fetching chart data for user:', userId, 'from', startDateStr);
+
   const { data: entries, error } = await supabase
     .from('daily_entries')
     .select('entry_date, closes_count')
@@ -132,8 +134,12 @@ export async function getChartData(userId: string, days: number = 30) {
     return { closingRateData: [], commissionsData: [] };
   }
 
+  console.log('Chart entries:', entries);
+
   const closingRateData = entries?.map(e => e.closes_count || 0) || [];
   const commissionsData = entries?.map(e => (e.closes_count || 0) * 1500) || [];
+
+  console.log('Chart data:', { closingRateData, commissionsData });
 
   return { closingRateData, commissionsData };
 }
