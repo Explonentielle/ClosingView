@@ -16,28 +16,28 @@ const toneMap = {
 
 const KpiCard = ({ label, value, badge, sub, valueColor = "#FFFFFF" }: Props) => (
   <div
-    className="rounded-[12px] border-hair p-4 flex flex-col gap-2"
+    className="rounded-[12px] border-hair p-3 sm:p-4 flex flex-col gap-2"
     style={{ background: "#161d2e", borderColor: "#2a3a50" }}
   >
-    <div className="text-[10px] tracking-[1.2px] font-semibold uppercase" style={{ color: "#8892a0" }}>
+    <div className="text-[8px] sm:text-[10px] tracking-[1.2px] font-semibold uppercase" style={{ color: "#8892a0" }}>
       {label}
     </div>
     <div className="flex items-end justify-between gap-2">
-      <span className="text-[24px] font-bold leading-none" style={{ color: valueColor }}>
+      <span className="text-lg sm:text-[24px] font-bold leading-none" style={{ color: valueColor }}>
         {value}
       </span>
       {badge && (
         <span
-          className="text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5"
+          className="text-[8px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5"
           style={{ background: toneMap[badge.tone].bg, color: toneMap[badge.tone].color }}
         >
-          {badge.dir === "up" ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
+          {badge.dir === "up" ? <ArrowUp size={8} className="sm:w-[10px] sm:h-[10px]" /> : <ArrowDown size={8} className="sm:w-[10px] sm:h-[10px]" />}
           {badge.text}
         </span>
       )}
     </div>
     {sub && (
-      <div className="text-[10px]" style={{ color: "#6b7a99" }}>
+      <div className="text-[8px] sm:text-[10px]" style={{ color: "#6b7a99" }}>
         {sub}
       </div>
     )}

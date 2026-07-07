@@ -50,7 +50,7 @@ export const ProfileDropdown = () => {
       {/* Avatar Button */}
       <button
         onClick={() => setOpen(!open)}
-        className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-[10px] font-bold hover:opacity-80 transition-opacity cursor-pointer overflow-hidden"
+        className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-bold hover:opacity-80 transition-opacity cursor-pointer overflow-hidden"
         style={{ background: "linear-gradient(135deg,#0EFF9C,#0a8d5e)", color: "#0D1117" }}
         title={user?.email || "Profile"}
       >
@@ -64,24 +64,24 @@ export const ProfileDropdown = () => {
       {/* Dropdown Menu */}
       {open && (
         <div
-          className="absolute right-0 mt-2 w-[200px] rounded-[10px] border border-[#2a3a50] bg-[#161d2e] shadow-lg animate-fade-in"
+          className="absolute right-0 mt-2 w-48 sm:w-[200px] rounded-[10px] border border-[#2a3a50] bg-[#161d2e] shadow-lg animate-fade-in"
           style={{ zIndex: 1000 }}
         >
           {/* Header with Email */}
-          <div className="px-3 py-2 border-b border-[#2a3a50]">
-            <p className="text-[10px] text-[#8892a0] font-bold uppercase tracking-wide">Compte</p>
-            <p className="text-[11px] text-white mt-1 truncate">{user?.email}</p>
+          <div className="px-2 sm:px-3 py-1.5 sm:py-2 border-b border-[#2a3a50]">
+            <p className="text-[9px] sm:text-[10px] text-[#8892a0] font-bold uppercase tracking-wide">Compte</p>
+            <p className="text-[10px] sm:text-[11px] text-white mt-0.5 sm:mt-1 truncate">{user?.email}</p>
           </div>
 
           {/* Menu Items */}
-          <div className="py-1">
+          <div className="py-0.5 sm:py-1">
             {/* Profile */}
             <Link
               to="/profile"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 text-[12px] text-white hover:bg-[#2a3a50] transition-colors"
+              className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[12px] text-white hover:bg-[#2a3a50] transition-colors"
             >
-              <User size={14} />
+              <User size={12} className="sm:w-[14px] sm:h-[14px]" />
               Mon profil
             </Link>
 
@@ -89,22 +89,22 @@ export const ProfileDropdown = () => {
             <Link
               to="/settings"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 text-[12px] text-white hover:bg-[#2a3a50] transition-colors"
+              className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[12px] text-white hover:bg-[#2a3a50] transition-colors"
             >
-              <Settings size={14} />
+              <Settings size={12} className="sm:w-[14px] sm:h-[14px]" />
               Paramètres
             </Link>
 
             {/* Divider */}
-            <div className="my-1 h-px" style={{ background: "#2a3a50" }} />
+            <div className="my-0.5 sm:my-1 h-px" style={{ background: "#2a3a50" }} />
 
             {/* Sign Out */}
             <button
               onClick={handleSignOut}
               disabled={loading}
-              className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+              className="w-full flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[12px] text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
             >
-              <LogOut size={14} />
+              <LogOut size={12} className="sm:w-[14px] sm:h-[14px]" />
               {loading ? "Déconnexion..." : "Déconnexion"}
             </button>
           </div>

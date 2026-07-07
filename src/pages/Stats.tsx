@@ -6,9 +6,9 @@ import type { ClosingRates } from "@/services";
 const FILTERS = ["Global", "Niche", "Infopreneur", "Challenge"];
 
 const KpiCell = ({ label, value, valueColor = "#FFFFFF" }: { label: string; value: string; valueColor?: string }) => (
-  <div style={{ background: "#161d2e", border: "0.5px solid #2a3a50", borderRadius: 10, padding: "10px 12px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-    <div style={{ color: "#6b7a99", fontSize: 7.5, fontWeight: 700, letterSpacing: "1.3px", textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
-    <div style={{ color: valueColor, fontSize: 16, fontWeight: 800, lineHeight: 1 }}>{value}</div>
+  <div style={{ background: "#161d2e", border: "0.5px solid #2a3a50", borderRadius: 10, padding: "8px 10px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+    <div style={{ color: "#6b7a99", fontSize: "0.625rem", fontWeight: 700, letterSpacing: "1.3px", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
+    <div style={{ color: valueColor, fontSize: "clamp(14px, 4vw, 16px)", fontWeight: 800, lineHeight: 1 }}>{value}</div>
   </div>
 );
 
@@ -88,6 +88,7 @@ const Radar = () => {
 };
 
 import TrackRecordModal from "@/components/stats/TrackRecordModal";
+import * as S from './Stats.styles';
 
 const Stats = () => {
   const { user } = useAuth();
@@ -115,25 +116,16 @@ const Stats = () => {
   }, [user, filter]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%", overflow: "hidden", padding: "12px 14px" }}>
+    <div className={S.statsContainer}>
       {/* Section 1 — Filtres */}
-      <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
+      <div className={S.filterSection}>
         {FILTERS.map((f) => {
           const active = filter === f;
           return (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              style={{
-                background: active ? "#0EFF9C" : "#161d2e",
-                color: active ? "#0D1117" : "#8892a0",
-                border: active ? "none" : "0.5px solid #2a3a50",
-                fontSize: 10,
-                fontWeight: 700,
-                padding: "4px 12px",
-                borderRadius: 6,
-                cursor: "pointer",
-              }}
+              style={S.filterButton(active)}
             >
               {f}
             </button>
@@ -142,85 +134,85 @@ const Stats = () => {
       </div>
 
       {/* Section 2 — Grid 2 cols */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, height: 246, flexShrink: 0 }}>
+      <div className={S.gridSection}>
         {/* Left col */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, height: 108 }}>
+        <div className={S.leftColSection}>
+          <div className={S.kpiGrid}>
             <KpiCell label="€ contracté" value={`${metrics.totalContracted.toLocaleString("fr-FR")}€`} />
             <KpiCell label="€ collecté" value={`${metrics.totalCollected.toLocaleString("fr-FR")}€`} valueColor="#0EFF9C" />
             <KpiCell label="Nb. closes" value={String(metrics.count)} />
             <KpiCell label="Délai" value={metrics.count > 0 ? "~2.3j" : "—"} />
           </div>
-          <div style={{ height: 130, background: "#161d2e", border: "0.5px solid #2a3a50", borderRadius: 10, padding: "10px 14px", marginTop: "5px", display: "flex", flexDirection: "column", overflow: "hidden", gap: 6 }}>
+          <div className={S.gaugeSection}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ color: "#6b7a99", fontSize: 7.5, fontWeight: 700, letterSpacing: "1.3px", textTransform: "uppercase" }}>Full Pay vs Split Pay</div>
-              <div style={{ color: "#0EFF9C", fontSize: 9, fontWeight: 700 }}>60%</div>
+              <div style={{ color: "#6b7a99", fontSize: "0.625rem", fontWeight: 700, letterSpacing: "1.3px", textTransform: "uppercase" }}>Full Pay vs Split Pay</div>
+              <div style={{ color: "#0EFF9C", fontSize: "0.75rem", fontWeight: 700 }}>60%</div>
             </div>
             <div style={{ flex: 1, minHeight: 0, display: "flex", justifyContent: "center", alignItems: "center" }}>
               <Gauge pct={60} />
             </div>
-            <div style={{ display: "flex", justifyContent: "center", gap: 14, fontSize: 8.5, color: "#6b7a99" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                <span style={{ width: 6, height: 6, borderRadius: 999, background: "#0EFF9C" }} /> Full Pay 60%
+            <div style={{ display: "flex", justifyContent: "center", gap: 2 , fontSize: "0.7rem", color: "#6b7a99", flexWrap: "wrap" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
+                <span style={{ width: 4, height: 4, borderRadius: 999, background: "#0EFF9C" }} /> Full Pay 60%
               </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                <span style={{ width: 6, height: 6, borderRadius: 999, background: "#EFB027" }} /> Split Pay 40%
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
+                <span style={{ width: 4, height: 4, borderRadius: 999, background: "#EFB027" }} /> Split Pay 40%
               </span>
             </div>
           </div>
         </div>
 
         {/* Right col — Close Score */}
-        <div style={{ height: 246, overflow: "hidden", background: "#060b14", border: "1px solid #0EFF9C44", borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "8px 4px" }}>
-          <div style={{ color: "#0EFF9C", fontSize: 9, fontWeight: 800, letterSpacing: "3.5px" }}>CLOSE SCORE</div>
-          <div style={{ width: 28, height: 1, background: "#0EFF9C", opacity: 0.3, marginTop: 2 }} />
-          <Radar />
-          <div style={{ color: "#0EFF9C", fontSize: 7.5, fontWeight: 700, letterSpacing: "3.5px", opacity: 0.65, marginTop: 2, flexShrink: 0 }}>BON PROFIL</div>
+        <div className={S.closeScoreSection}>
+          <div style={{ color: "#0EFF9C", fontSize: "clamp(0.625rem, 2vw, 0.75rem)", fontWeight: 800, letterSpacing: "3.5px" }}>CLOSE SCORE</div>
+          <div style={{ width: 24, height: 1, background: "#0EFF9C", opacity: 0.3, marginTop: 2 }} />
+          <div style={{ width: "100%", height: "100%", minHeight: "150px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Radar />
+          </div>
+          <div style={{ color: "#0EFF9C", fontSize: "0.625rem", fontWeight: 700, letterSpacing: "3.5px", opacity: 0.65, marginTop: 2, flexShrink: 0 }}>BON PROFIL</div>
         </div>
       </div>
 
       {/* Section 3 — 3 taux */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, height: 90, flexShrink: 0, marginTop: 12 }}>
+      <div className={S.rateGrid + " mt-2 sm:mt-3"}>
         {[
           { label: "Taux no show", value: `${rates.noShow}%`, color: "#F87171", border: "#F8717133" },
           { label: "Taux follow up", value: `${rates.followUp}%`, color: "#EFB027", border: "#EFB02733" },
           { label: "Taux closing", value: `${rates.closing}%`, color: "#0EFF9C", border: "#0EFF9C33" },
         ].map((t) => (
-          <div key={t.label} style={{ background: "#161d2e", border: `0.5px solid ${t.border}`, borderRadius: 10, padding: "12px 14px", textAlign: "center", height: 90, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ fontSize: 7.5, color: "#6b7a99", fontWeight: 700, letterSpacing: "1.3px", textTransform: "uppercase", marginBottom: 6 }}>{t.label}</div>
-            <div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1, marginBottom: 3, color: t.color }}>{t.value}</div>
-            <div style={{ fontSize: 8.5, opacity: 0.6, color: "#FFFFFF" }}>{t.sub}</div>
+          <div key={t.label} style={{ background: "#161d2e", border: `0.5px solid ${t.border}`, borderRadius: 10, padding: "10px 8px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "70px" }}>
+            <div style={{ fontSize: "0.625rem", color: "#6b7a99", fontWeight: 700, letterSpacing: "1.3px", textTransform: "uppercase", marginBottom: 4 }}>{t.label}</div>
+            <div style={{ fontSize: "clamp(18px, 5vw, 24px)", fontWeight: 800, lineHeight: 1, marginBottom: 2, color: t.color }}>{t.value}</div>
+            <div style={{ fontSize: "0.7rem", opacity: 0.6, color: "#FFFFFF" }}>{t.sub}</div>
           </div>
         ))}
       </div>
 
       {/* Section 4 — Résumé */}
-      <div style={{ height: 80, flexShrink: 0, background: "#161d2e", border: "0.5px solid #2a3a50", borderRadius: 10, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", height: "100%" }}>
-          {[
-            { label: "Closes", value: "7", color: "#0EFF9C", bar: "linear-gradient(90deg, #0EFF9C, #0EFF9C44)" },
-            { label: "R1 effectués", value: "24", color: "#FFFFFF", bar: "#2a3a50" },
-            { label: "R2 effectués", value: "11", color: "#FFFFFF", bar: "#2a3a50" },
-            { label: "Follow up", value: "4", color: "#EFB027", bar: "linear-gradient(90deg, #EFB027, #EFB02744)" },
-          ].map((c, i) => (
-            <div key={c.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 8, borderRight: i < 3 ? "0.5px solid #1e2530" : "none" }}>
-              <div style={{ fontSize: 8, color: "#6b7a99", letterSpacing: "1px", marginBottom: 5, textTransform: "uppercase", fontWeight: 700 }}>{c.label}</div>
-              <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1, color: c.color }}>{c.value}</div>
-              <div style={{ height: 3, width: 20, borderRadius: 999, background: c.bar, marginTop: 4 }} />
-            </div>
-          ))}
-        </div>
+      <div className={S.summaryGrid}>
+        {[
+          { label: "Closes", value: "7", color: "#0EFF9C", bar: "linear-gradient(90deg, #0EFF9C, #0EFF9C44)" },
+          { label: "R1 effectués", value: "24", color: "#FFFFFF", bar: "#2a3a50" },
+          { label: "R2 effectués", value: "11", color: "#FFFFFF", bar: "#2a3a50" },
+          { label: "Follow up", value: "4", color: "#EFB027", bar: "linear-gradient(90deg, #EFB027, #EFB02744)" },
+        ].map((c, i) => (
+          <div key={c.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "8px 4px", borderRight: i < 3 ? "0.5px solid #1e2530" : "none" }}>
+            <div style={{ fontSize: "0.65rem", color: "#6b7a99", letterSpacing: "0.5px", marginBottom: 3, textTransform: "uppercase", fontWeight: 700 }}>{c.label}</div>
+            <div style={{ fontSize: "clamp(16px, 4vw, 20px)", fontWeight: 900, lineHeight: 1, color: c.color }}>{c.value}</div>
+            <div style={{ height: 2, width: 16, borderRadius: 999, background: c.bar, marginTop: 3 }} />
+          </div>
+        ))}
       </div>
 
       {/* Section 5 — bouton */}
-      <div style={{ flexShrink: 0 }}>
-        <button onClick={() => setTrackOpen(true)} style={{ width: "100%", padding: 10, background: "#0EFF9C", color: "#0D1117", border: "none", borderRadius: 9, fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: "Inter, sans-serif", height: 40 }}>
+      <div className="flex-shrink-0">
+        <button onClick={() => setTrackOpen(true)} className={S.submitButton}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0D1117" strokeWidth={2.5}>
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          Générer mon Track Record (PDF)
+          <span>Générer mon Track Record (PDF)</span>
         </button>
       </div>
       <TrackRecordModal open={trackOpen} onClose={() => setTrackOpen(false)} rates={rates} />

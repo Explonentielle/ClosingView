@@ -37,8 +37,8 @@ const Network = () => {
   }, []);
 
   return (
-    <div className="animate-fade-in space-y-5">
-      <div className="flex items-center justify-between border-b" style={{ borderColor: "#1a2232" }}>
+    <div className="animate-fade-in space-y-4 sm:space-y-5 px-4 sm:px-0">
+      <div className="flex items-center justify-between border-b overflow-x-auto" style={{ borderColor: "#1a2232" }}>
         <div className="flex">
           {TABS.map((t) => {
             const active = t.key === tab;
@@ -46,7 +46,7 @@ const Network = () => {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className="px-4 py-2.5 text-[12px] transition-colors"
+                className="px-2 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-[12px] transition-colors flex-shrink-0"
                 style={{
                   color: "white",
                   opacity: active ? 1 : 0.65,
@@ -61,9 +61,9 @@ const Network = () => {
             );
           })}
         </div>
-        <div className="flex items-center gap-1.5 pr-1">
-          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#0EFF9C" }} />
-          <span className="text-[11px] font-bold" style={{ color: "#0EFF9C" }}>{onlineCount} en ligne</span>
+        <div className="flex items-center gap-1 sm:gap-1.5 pr-1 flex-shrink-0">
+          <span className="w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full animate-pulse" style={{ background: "#0EFF9C" }} />
+          <span className="text-[9px] sm:text-[11px] font-bold whitespace-nowrap" style={{ color: "#0EFF9C" }}>{onlineCount} en ligne</span>
         </div>
       </div>
 

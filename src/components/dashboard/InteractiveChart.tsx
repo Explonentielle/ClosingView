@@ -70,12 +70,12 @@ const InteractiveChart = ({ title, data, color, badgeFormatter, monthLabels, act
       className="rounded-[12px] border-hair p-4 flex flex-col gap-3"
       style={{ background: "#0a0f1a", borderColor: "#2a3a50" }}
     >
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-2">
         <div>
-          <h3 className="text-[12px] font-semibold text-white">{title}</h3>
+          <h3 className="text-[10px] sm:text-[12px] font-semibold text-white">{title}</h3>
         </div>
         <span
-          className="text-[10px] font-bold px-2 py-1 rounded-md transition-150"
+          className="text-[8px] sm:text-[10px] font-bold px-2 py-1 rounded-md transition-150 flex-shrink-0"
           style={{ background: `${color}18`, color }}
         >
           {badgeText}

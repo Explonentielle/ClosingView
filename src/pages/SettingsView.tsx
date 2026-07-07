@@ -54,79 +54,79 @@ const SettingsView = () => {
   const inputClass = "w-full h-11 rounded-lg border border-input bg-secondary/50 px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all";
 
   return (
-    <div className={`${responsiveClass.tightContainer} space-y-6 animate-slide-up`}>
+    <div className={`${responsiveClass.tightContainer} space-y-4 sm:space-y-6 animate-slide-up px-3 sm:px-0`}>
       <div>
-        <h2 className="text-2xl sm:text-3xl font-bold">Paramètres</h2>
-        <p className="text-muted-foreground text-sm mt-1">Gérez votre compte et vos préférences</p>
+        <h2 className="text-lg sm:text-2xl font-bold">Paramètres</h2>
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">Gérez votre compte et vos préférences</p>
       </div>
 
-      <div className="glass-card p-6 space-y-5">
+      <div className="glass-card p-4 sm:p-6 space-y-3 sm:space-y-5">
         <div className="flex items-center gap-3 mb-2">
-          <User size={18} className="text-primary" />
-          <h3 className="font-semibold">Profil</h3>
+          <User size={16} className="sm:w-[18px] sm:h-[18px] text-primary" />
+          <h3 className="font-semibold text-sm sm:text-base">Profil</h3>
         </div>
         {profileLoading ? (
-          <div className="text-sm text-muted-foreground">Chargement...</div>
+          <div className="text-xs sm:text-sm text-muted-foreground">Chargement...</div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="text-sm text-muted-foreground mb-1.5 block">Prénom</label>
+                <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">Prénom</label>
                 <input
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className={inputClass}
+                  className={inputClass + " text-xs sm:text-sm"}
                   placeholder="Prénom"
                 />
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-1.5 block">Nom</label>
+                <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">Nom</label>
                 <input
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className={inputClass}
+                  className={inputClass + " text-xs sm:text-sm"}
                   placeholder="Nom"
                 />
               </div>
             </div>
             <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Email</label>
+              <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">Email</label>
               <input
                 type="email"
                 value={email}
                 disabled
-                className={`${inputClass} opacity-50 cursor-not-allowed`}
+                className={`${inputClass} opacity-50 cursor-not-allowed text-xs sm:text-sm`}
               />
-              <p className="text-xs text-muted-foreground mt-1">L'email ne peut pas être modifié</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">L'email ne peut pas être modifié</p>
             </div>
             <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Téléphone</label>
+              <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">Téléphone</label>
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className={inputClass}
+                className={inputClass + " text-xs sm:text-sm"}
                 placeholder="+33 6 __ __ __ __"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="text-sm text-muted-foreground mb-1.5 block">Ville</label>
+                <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">Ville</label>
                 <input
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className={inputClass}
+                  className={inputClass + " text-xs sm:text-sm"}
                   placeholder="Paris"
                 />
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-1.5 block">Ans d'expérience</label>
+                <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">Ans d'expérience</label>
                 <input
                   type="number"
                   min="0"
                   max="50"
                   value={experienceYears}
                   onChange={(e) => setExperienceYears(Number(e.target.value))}
-                  className={inputClass}
+                  className={inputClass + " text-xs sm:text-sm"}
                 />
               </div>
             </div>
@@ -134,29 +134,29 @@ const SettingsView = () => {
         )}
       </div>
 
-      <div className="glass-card p-6 space-y-4">
+      <div className="glass-card p-4 sm:p-6 space-y-3 sm:space-y-4">
         <div className="flex items-center gap-3 mb-2">
-          <Bell size={18} className="text-primary" />
-          <h3 className="font-semibold">Notifications</h3>
+          <Bell size={16} className="sm:w-[18px] sm:h-[18px] text-primary" />
+          <h3 className="font-semibold text-sm sm:text-base">Notifications</h3>
         </div>
         {["Nouveaux deals", "Objectifs atteints", "Classement mis à jour"].map((n) => (
           <label key={n} className="flex items-center justify-between py-2">
-            <span className="text-sm">{n}</span>
-            <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-primary" />
+            <span className="text-xs sm:text-sm">{n}</span>
+            <input type="checkbox" defaultChecked className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded accent-primary" />
           </label>
         ))}
       </div>
 
-      <div className="glass-card p-6 space-y-4">
+      <div className="glass-card p-4 sm:p-6 space-y-3 sm:space-y-4">
         <div className="flex items-center gap-3 mb-2">
-          <Shield size={18} className="text-primary" />
-          <h3 className="font-semibold">Sécurité</h3>
+          <Shield size={16} className="sm:w-[18px] sm:h-[18px] text-primary" />
+          <h3 className="font-semibold text-sm sm:text-base">Sécurité</h3>
         </div>
         <button
           onClick={() => setChangePasswordOpen(true)}
-          className="w-full h-11 rounded-lg border border-primary/30 text-primary font-semibold text-sm hover:bg-primary/10 transition-colors flex items-center justify-center gap-2"
+          className="w-full h-9 sm:h-11 rounded-lg border border-primary/30 text-primary font-semibold text-xs sm:text-sm hover:bg-primary/10 transition-colors flex items-center justify-center gap-2"
         >
-          <Lock size={16} />
+          <Lock size={14} className="sm:w-4 sm:h-4" />
           Changer le mot de passe
         </button>
       </div>
@@ -164,7 +164,7 @@ const SettingsView = () => {
       <button
         onClick={handleSave}
         disabled={saving || profileLoading}
-        className="w-full h-11 rounded-lg gradient-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full h-9 sm:h-11 rounded-lg gradient-primary text-primary-foreground font-semibold text-xs sm:text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {saving ? "Sauvegarde..." : "Sauvegarder"}
       </button>
