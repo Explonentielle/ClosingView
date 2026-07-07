@@ -12,7 +12,11 @@ type Props = {
 
 // Catmull-Rom → Bezier smooth path
 function smoothPath(points: [number, number][]) {
-  if (points.length < 2) return "";
+  if (points.length === 0) return "";
+  if (points.length === 1) {
+    const [x, y] = points[0];
+    return `M ${x} ${y} L ${x + 1} ${y}`;
+  }
   const d = [`M ${points[0][0]} ${points[0][1]}`];
   for (let i = 0; i < points.length - 1; i++) {
     const p0 = points[i - 1] || points[i];
