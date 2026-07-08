@@ -146,7 +146,7 @@ const ClientsPage = () => {
           <button
             onClick={() => setOpen(true)}
             className="rounded-[12px] p-3 sm:p-4 flex items-center justify-center text-[10px] sm:text-[12px] font-bold transition-150 hover:bg-white/[0.02]"
-            style={{ border: "1.5px dashed #2a3a50", color: "#6b7a99", minHeight: "120px" }}
+            style={{ border: "1.5px dashed #2a3a50", color: "#6b7a99", minHeight: "120px", alignSelf: "start" }}
           >+ Ajouter un client</button>
         )}
       </div>
