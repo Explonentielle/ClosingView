@@ -39,12 +39,7 @@ const ClientsPage = () => {
   }, [list]);
 
   const toggleClientExpand = (clientId: string) => {
-    console.log('Toggle expand for client:', clientId, 'current state:', expandedClients);
-    setExpandedClients(prev => {
-      const newState = { ...prev, [clientId]: !prev[clientId] };
-      console.log('New expanded state:', newState);
-      return newState;
-    });
+    setExpandedClients(prev => ({ ...prev, [clientId]: !prev[clientId] }));
   };
 
   return (
@@ -83,13 +78,12 @@ const ClientsPage = () => {
               const offers = clientOffers[c.id] || [];
               const offerCount = offers.length;
               const totalOffers = offers.reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
-              console.log(`Client ${c.name} (${c.id}):`, { isExpanded, expandedClients });
 
               return (
                 <div
                   key={c.id}
                   className="rounded-[12px] border-hair p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 transition-150 hover:scale-[1.005]"
-                  style={{ background: "#161d2e", borderColor: "#2a3a50" }}
+                  style={{ background: "#161d2e", borderColor: "#2a3a50", alignSelf: "start" }}
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = c.color)}
                   onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#2a3a50")}
                 >
