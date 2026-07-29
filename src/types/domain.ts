@@ -23,32 +23,6 @@ export interface Offer {
   created_at: string;
 }
 
-export interface Stat {
-  id: string;
-  user_id: string;
-  date: string;
-  cash: number;
-  closes: number;
-  taux: number;
-  commissions: number;
-  cashTrend?: number;
-  closingTrend?: number;
-  created_at: string;
-}
-
-export interface Objective {
-  label: string;
-  pct: number;
-  display: string;
-  color: 'green' | 'yellow' | 'blue';
-}
-
-export interface CommissionData {
-  name: string;
-  value: number;
-  source: string;
-}
-
 export interface UserProfile {
   id: string;
   first_name: string;

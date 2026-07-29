@@ -127,8 +127,12 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
       overlayId="track-record-modal-overlay"
       overlayStyle={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" }}
       contentClassName="track-record-modal"
-      contentStyle={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 740, maxHeight: "90vh", overflowY: "auto", color: "#0f172a", fontFamily: "Inter, sans-serif" }}
+      contentStyle={{ borderRadius: 16, width: "100%", maxWidth: 740, maxHeight: "90vh", overflow: "hidden", fontFamily: "Inter, sans-serif" }}
     >
+      {/* Scrolling happens in this inner, un-rounded layer so the native
+          scrollbar never overlaps the outer rounded corners (clipped above
+          via overflow: hidden on the Radix Content itself). */}
+      <div className="track-record-modal-scroll" style={{ maxHeight: "90vh", overflowY: "auto", background: "#fff", color: "#0f172a" }}>
         {/* BLOC 1 - HEADER */}
         <div style={{ background: "#0f172a", padding: "32px 40px", borderRadius: "16px 16px 0 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
           <div>
@@ -316,6 +320,7 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
           <span style={{ color: "#64748b", fontSize: 11, fontWeight: 600 }}>Closing View · app.closingview.io</span>
           <span style={{ color: "#94a3b8", fontSize: 11 }}>Document certifié · {today()}</span>
         </div>
+      </div>
     </ModalOverlay>
   );
 };

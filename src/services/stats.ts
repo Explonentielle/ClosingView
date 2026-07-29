@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { Stat } from '@/types';
 
 // Fallback commission rate used when a close isn't linked to an offer
 // (or the linked offer predates the per-offer commission_rate field).
@@ -13,64 +12,93 @@ interface DateRangeOverride {
 function resolveDateBounds(days: number, customRange?: DateRangeOverride) {
   if (customRange) {
     return {
+      startDate: customRange.from,
+      endDate: customRange.to,
       startDateStr: customRange.from.toISOString().split('T')[0],
       endDateStr: customRange.to.toISOString().split('T')[0] as string | undefined,
     };
   }
+  const endDate = new Date();
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
-  return { startDateStr: startDate.toISOString().split('T')[0], endDateStr: undefined as string | undefined };
+  return {
+    startDate,
+    endDate,
+    startDateStr: startDate.toISOString().split('T')[0],
+    endDateStr: undefined as string | undefined,
+  };
 }
 
-export async function getStats(userId: string): Promise<Stat[]> {
-  const { data, error } = await supabase
-    .from('stats')
-    .select('*')
-    .eq('user_id', userId)
-    .order('date', { ascending: false });
+type ChartGranularity = 'day' | 'week' | 'month';
 
-  if (error) {
-    console.error('Error fetching stats:', error);
-    return [];
-  }
-
-  return data ?? [];
+function pickGranularity(spanDays: number): ChartGranularity {
+  if (spanDays <= 35) return 'day';
+  if (spanDays <= 200) return 'week';
+  return 'month';
 }
 
-export async function createStat(stat: Omit<Stat, 'id' | 'created_at'>): Promise<Stat | null> {
-  const { data, error } = await supabase
-    .from('stats')
-    .insert([stat])
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error creating stat:', error);
-    return null;
+function bucketKey(date: Date, granularity: ChartGranularity): string {
+  if (granularity === 'month') {
+    return `${date.getFullYear()}-${date.getMonth()}`;
   }
-
-  return data;
+  if (granularity === 'week') {
+    const d = new Date(date);
+    const dayOfWeek = (d.getDay() + 6) % 7; // Monday = 0
+    d.setDate(d.getDate() - dayOfWeek);
+    return d.toISOString().split('T')[0];
+  }
+  return date.toISOString().split('T')[0];
 }
 
-export async function getStatsByDateRange(
-  userId: string,
-  startDate: string,
-  endDate: string
-): Promise<Stat[]> {
-  const { data, error } = await supabase
-    .from('stats')
-    .select('*')
-    .eq('user_id', userId)
-    .gte('date', startDate)
-    .lte('date', endDate)
-    .order('date', { ascending: true });
+function formatBucketLabel(date: Date, granularity: ChartGranularity): string {
+  if (granularity === 'month') {
+    return date.toLocaleDateString('fr-FR', { month: 'short' });
+  }
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+}
 
-  if (error) {
-    console.error('Error fetching stats by date range:', error);
-    return [];
+/**
+ * Builds a series spanning the FULL requested date range (bucketed by day,
+ * week, or month depending on the span), filling zeros where no real data
+ * exists — instead of silently compressing the chart down to only the dates
+ * that happen to have entries.
+ */
+function buildBucketedSeries(
+  startDate: Date,
+  endDate: Date,
+  granularity: ChartGranularity,
+  rawByDate: Record<string, number>
+): { data: number[]; labels: string[] } {
+  const order: string[] = [];
+  const totals = new Map<string, number>();
+  const bucketDates = new Map<string, Date>();
+
+  const cursor = new Date(startDate);
+  cursor.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+
+  while (cursor <= end) {
+    const key = bucketKey(cursor, granularity);
+    if (!totals.has(key)) {
+      totals.set(key, 0);
+      bucketDates.set(key, new Date(cursor));
+      order.push(key);
+    }
+    cursor.setDate(cursor.getDate() + 1);
   }
 
-  return data ?? [];
+  Object.entries(rawByDate).forEach(([dateStr, value]) => {
+    const key = bucketKey(new Date(dateStr), granularity);
+    if (totals.has(key)) {
+      totals.set(key, (totals.get(key) || 0) + value);
+    }
+  });
+
+  return {
+    data: order.map((k) => totals.get(k) || 0),
+    labels: order.map((k) => formatBucketLabel(bucketDates.get(k) as Date, granularity)),
+  };
 }
 
 export interface ClosingRates {
@@ -147,34 +175,63 @@ export async function getClosingMetrics(userId: string, days: number = 30, clien
 }
 
 export async function getChartData(userId: string, days: number = 30, customRange?: DateRangeOverride) {
-  const { startDateStr, endDateStr } = resolveDateBounds(days, customRange);
+  const { startDate, endDate, startDateStr, endDateStr } = resolveDateBounds(days, customRange);
+  const spanDays = Math.max(1, Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+  const granularity = pickGranularity(spanDays);
 
-  let query = supabase
+  let entriesQuery = supabase
     .from('daily_entries')
     .select('entry_date, closes_count')
     .eq('user_id', userId)
     .gte('entry_date', startDateStr)
     .order('entry_date', { ascending: true });
-  if (endDateStr) query = query.lte('entry_date', endDateStr);
+  if (endDateStr) entriesQuery = entriesQuery.lte('entry_date', endDateStr);
 
-  const { data: entries, error } = await query;
+  let closesQuery = supabase
+    .from('closes')
+    .select('close_date, contracted_amount, offers(commission_rate)')
+    .eq('user_id', userId)
+    .gte('close_date', startDateStr)
+    .order('close_date', { ascending: true });
+  if (endDateStr) closesQuery = closesQuery.lte('close_date', endDateStr);
 
-  if (error) {
-    console.error('Error fetching chart data:', error);
-    return { closingRateData: [], commissionsData: [] };
-  }
+  const [{ data: entries, error: entriesError }, { data: closes, error: closesError }] = await Promise.all([
+    entriesQuery,
+    closesQuery,
+  ]);
 
-  // Group by date and sum closes_count for duplicate dates
-  const byDate: Record<string, number> = {};
+  if (entriesError) console.error('Error fetching chart entries:', entriesError);
+  if (closesError) console.error('Error fetching chart closes:', closesError);
+
+  // Real closes per day
+  const closesByDate: Record<string, number> = {};
   entries?.forEach(e => {
-    const date = e.entry_date;
-    byDate[date] = (byDate[date] || 0) + (e.closes_count || 0);
+    closesByDate[e.entry_date] = (closesByDate[e.entry_date] || 0) + (e.closes_count || 0);
   });
 
-  const closingRateData = Object.values(byDate);
-  const commissionsData = closingRateData.map(v => v * 1500);
+  // Real commissions per day (contracted_amount * the linked offer's commission_rate,
+  // falling back to DEFAULT_COMMISSION_RATE for closes without an offer)
+  const commissionsByDate: Record<string, number> = {};
+  closes?.forEach(c => {
+    if (!c.close_date) return;
+    const rate = Number(c.offers?.commission_rate ?? DEFAULT_COMMISSION_RATE);
+    const commission = (Number(c.contracted_amount) || 0) * (rate / 100);
+    commissionsByDate[c.close_date] = (commissionsByDate[c.close_date] || 0) + commission;
+  });
 
-  return { closingRateData, commissionsData };
+  const closingRate = buildBucketedSeries(startDate, endDate, granularity, closesByDate);
+  const commissions = buildBucketedSeries(startDate, endDate, granularity, commissionsByDate);
+
+  return {
+    closingRateData: closingRate.data,
+    closingRateLabels: closingRate.labels,
+    commissionsData: commissions.data,
+    commissionLabels: commissions.labels,
+    // Whether any real daily_entries exist in the range — the series above
+    // always span the full period (zero-filled), so array length alone can't
+    // tell an empty account from one with real data.
+    hasData: (entries?.length ?? 0) > 0,
+  };
 }
 
 export interface DailyEntryHistoryRow {

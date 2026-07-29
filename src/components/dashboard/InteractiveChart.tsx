@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 
+export type ChartLabel = { index: number; text: string };
+
 type Props = {
   title: string;
   data: number[];
   color: string;            // hex
   badgeFormatter: (avg: number, hovered?: number) => string;
-  monthLabels: string[];
-  activeMonthIndex: number; // index in monthLabels for active highlight
+  labels: ChartLabel[];     // x-axis tick labels, each pinned to a real index in `data`
   formatY?: (v: number) => string;
 };
 
@@ -34,20 +35,16 @@ function smoothPath(points: [number, number][]) {
 
 const W = 560, H = 200, P = { l: 16, r: 16, t: 18, b: 28 };
 
-const InteractiveChart = ({ title, data, color, badgeFormatter, monthLabels, activeMonthIndex, formatY }: Props) => {
+const InteractiveChart = ({ title, data, color, badgeFormatter, labels, formatY }: Props) => {
   const [hover, setHover] = useState<number | null>(null);
-
-  console.log(`InteractiveChart "${title}" received data:`, data);
 
   const { points, avg } = useMemo(() => {
     if (data.length === 0) {
-      console.log(`Chart "${title}" has no data`);
       return { points: [], avg: 0 };
     }
     const min = Math.min(...data);
     const max = Math.max(...data);
     const range = max - min || 1;
-    console.log(`Chart "${title}" - min: ${min}, max: ${max}, range: ${range}`);
     const stepX = (W - P.l - P.r) / Math.max(data.length - 1, 1);
     const ys = data.map(v => P.t + (H - P.t - P.b) * (1 - (v - min) / range));
     const xs = data.map((_, i) => P.l + i * stepX);
@@ -131,13 +128,14 @@ const InteractiveChart = ({ title, data, color, badgeFormatter, monthLabels, act
           );
         })()}
 
-        {/* labels mois */}
-        {monthLabels.map((m, i) => {
-          const x = P.l + (i * (W - P.l - P.r)) / (monthLabels.length - 1);
-          const active = i === activeMonthIndex;
+        {/* labels de dates, positionnés sur le vrai point de données qu'ils représentent */}
+        {labels.map((label) => {
+          const stepX = (W - P.l - P.r) / Math.max(data.length - 1, 1);
+          const x = P.l + label.index * stepX;
+          const active = label.index === data.length - 1;
           return (
             <text
-              key={m}
+              key={label.index}
               x={x}
               y={H - 8}
               textAnchor="middle"
@@ -145,7 +143,7 @@ const InteractiveChart = ({ title, data, color, badgeFormatter, monthLabels, act
               fontWeight={active ? 700 : 500}
               fill={active ? color : "#8892a0"}
             >
-              {m}
+              {label.text}
             </text>
           );
         })}

@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { ChevronDown, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useClientsList } from "@/hooks/useClientsList";
-import { getDefaultClients, adaptClientData } from "@/lib/data";
 import { getClientOffers } from "@/services/clients";
 import { responsiveClass } from "@/lib/responsive";
 import { ClientModal, ClientFormData } from "@/components/modals/ClientModal";
@@ -43,10 +42,7 @@ const ClientsPage = () => {
   const [expandedClients, setExpandedClients] = useState<Record<string, boolean>>({});
   const [clientOffers, setClientOffers] = useState<Record<string, any[]>>({});
 
-  // Use real clients if available, otherwise use mock data
-  const isRealData = realClients.length > 0;
-  const displayClients = isRealData ? realClients : getDefaultClients();
-  const list = displayClients.map(adaptClientData);
+  const list = realClients;
 
   const refetchOffers = async (clientId: string) => {
     const offers = await getClientOffers(clientId);
@@ -221,26 +217,24 @@ const ClientsPage = () => {
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] sm:text-[13px] font-bold text-white leading-tight truncate">{c.name}</p>
                     </div>
-                    {isRealData && (
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <button
-                          onClick={() => openEditModal(c)}
-                          className="h-6 w-6 flex items-center justify-center rounded-md transition-150 hover:bg-white/5"
-                          style={S.cardIconButtonStyle}
-                          title="Modifier le client"
-                        >
-                          <Pencil size={12} />
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget({ type: "client", client: c })}
-                          className="h-6 w-6 flex items-center justify-center rounded-md transition-150 hover:bg-white/5"
-                          style={S.dangerTextStyle}
-                          title="Supprimer le client"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => openEditModal(c)}
+                        className="h-6 w-6 flex items-center justify-center rounded-md transition-150 hover:bg-white/5"
+                        style={S.cardIconButtonStyle}
+                        title="Modifier le client"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget({ type: "client", client: c })}
+                        className="h-6 w-6 flex items-center justify-center rounded-md transition-150 hover:bg-white/5"
+                        style={S.dangerTextStyle}
+                        title="Supprimer le client"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex gap-1 sm:gap-1.5 flex-wrap">
@@ -282,16 +276,14 @@ const ClientsPage = () => {
                             <span className="text-[8px] sm:text-[9px]" style={{ color: "#8892a0" }}>
                               {Number(offer.commission_rate) || 0}%
                             </span>
-                            {isRealData && (
-                              <button
-                                onClick={() => setDeleteTarget({ type: "offer", offerId: offer.id, clientId: c.id, offerName: offer.name })}
-                                className="h-5 w-5 flex items-center justify-center rounded-md transition-150 hover:bg-white/5"
-                                style={S.dangerTextStyle}
-                                title="Supprimer l'offre"
-                              >
-                                <Trash2 size={11} />
-                              </button>
-                            )}
+                            <button
+                              onClick={() => setDeleteTarget({ type: "offer", offerId: offer.id, clientId: c.id, offerName: offer.name })}
+                              className="h-5 w-5 flex items-center justify-center rounded-md transition-150 hover:bg-white/5"
+                              style={S.dangerTextStyle}
+                              title="Supprimer l'offre"
+                            >
+                              <Trash2 size={11} />
+                            </button>
                           </div>
                         </div>
                       ))}

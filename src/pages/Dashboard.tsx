@@ -6,12 +6,13 @@ import InteractiveChart from "@/components/dashboard/InteractiveChart";
 import DatePickerFilter from "@/components/dashboard/DatePickerFilter";
 import StreakBanner from "@/components/dashboard/StreakBanner";
 import DailyEntriesHistory from "@/components/dashboard/DailyEntriesHistory";
-import { Range, monthLabels } from "@/data/mocks";
+import { Range } from "@/data/mocks";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { getChartData, getDashboardStats, getDailyEntriesHistory } from "@/services";
 import type { DailyEntryHistoryRow } from "@/services";
 import { responsiveClass } from "@/lib/responsive";
+import { pickChartLabels } from "@/lib/dateLabels";
 import * as S from './Dashboard.styles';
 
 const RANGES: Range[] = ["7j", "30j", "3m", "1a"];
@@ -29,7 +30,13 @@ const Dashboard = () => {
   const targetCash = profile?.target_cash_monthly ?? 15000;
   const targetCloses = profile?.target_closes_monthly ?? 10;
 
-  const [chartData, setChartData] = useState({ closingRateData: [] as number[], commissionsData: [] as number[] });
+  const [chartData, setChartData] = useState({
+    closingRateData: [] as number[],
+    closingRateLabels: [] as string[],
+    commissionsData: [] as number[],
+    commissionLabels: [] as string[],
+    hasData: false,
+  });
   const [chartsLoading, setChartsLoading] = useState(true);
 
   const [entriesHistory, setEntriesHistory] = useState<DailyEntryHistoryRow[]>([]);
@@ -157,7 +164,7 @@ const Dashboard = () => {
             <div className="p-4 text-center text-blue-400">Chargement des graphiques...</div>
             <div className="p-4 text-center text-blue-400">Chargement des graphiques...</div>
           </>
-        ) : chartData.closingRateData.length === 0 ? (
+        ) : !chartData.hasData ? (
           <>
             <div className="p-12 text-center rounded-[12px]" style={{ background: "#0a0f1a", borderColor: "#2a3a50", border: "1px solid #2a3a50" }}>
               <p style={{ color: "#8892a0", fontSize: "14px" }}>Aucune donnée pour le moment</p>
@@ -166,17 +173,6 @@ const Dashboard = () => {
             <div className="p-12 text-center rounded-[12px]" style={{ background: "#0a0f1a", borderColor: "#2a3a50", border: "1px solid #2a3a50" }}>
               <p style={{ color: "#8892a0", fontSize: "14px" }}>Aucune donnée pour le moment</p>
               <p style={{ color: "#6b7a99", fontSize: "12px", marginTop: "4px" }}>Saisissez une journée pour voir les graphiques</p>
-            </div>
-          </>
-        ) : chartData.closingRateData.length === 1 ? (
-          <>
-            <div className="p-12 text-center rounded-[12px]" style={{ background: "#0a0f1a", borderColor: "#2a3a50", border: "1px solid #2a3a50" }}>
-              <p style={{ color: "#8892a0", fontSize: "14px" }}>Besoin de plus de données</p>
-              <p style={{ color: "#6b7a99", fontSize: "12px", marginTop: "4px" }}>Ajoutez des saisies pour au moins 2 jours différents</p>
-            </div>
-            <div className="p-12 text-center rounded-[12px]" style={{ background: "#0a0f1a", borderColor: "#2a3a50", border: "1px solid #2a3a50" }}>
-              <p style={{ color: "#8892a0", fontSize: "14px" }}>Besoin de plus de données</p>
-              <p style={{ color: "#6b7a99", fontSize: "12px", marginTop: "4px" }}>Ajoutez des saisies pour au moins 2 jours différents</p>
             </div>
           </>
         ) : (
@@ -188,8 +184,7 @@ const Dashboard = () => {
               badgeFormatter={(avg, hv) =>
                 hv !== undefined ? `${hv} closes` : `Moy. ${Math.round(avg)} closes`
               }
-              monthLabels={monthLabels}
-              activeMonthIndex={chartData.closingRateData.length - 1}
+              labels={pickChartLabels(chartData.closingRateLabels)}
             />
             <InteractiveChart
               title="Commissions"
@@ -198,8 +193,7 @@ const Dashboard = () => {
               badgeFormatter={(_, hv) =>
                 hv !== undefined ? `${Math.round(hv).toLocaleString("fr-FR")}€` : `+${trendComm}%`
               }
-              monthLabels={monthLabels}
-              activeMonthIndex={chartData.commissionsData.length - 1}
+              labels={pickChartLabels(chartData.commissionLabels)}
             />
           </>
         )}

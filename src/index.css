@@ -151,7 +151,7 @@ button, a, [role="button"], .transition-150 { transition: all 150ms ease; }
     overflow: visible !important;
     height: auto !important;
   }
-  .track-record-modal {
+  .track-record-modal, .track-record-modal-scroll {
     max-height: none !important;
     overflow: visible !important;
     box-shadow: none !important;
