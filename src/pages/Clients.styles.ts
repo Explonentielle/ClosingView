@@ -68,3 +68,15 @@ export const submitButtonStyle = {
 export const optionStyle = {
   background: '#0D1117',
 };
+
+export const removeOfferButtonStyle = {
+  color: '#8892a0',
+};
+
+export const cardIconButtonStyle = {
+  color: '#8892a0',
+};
+
+export const dangerTextStyle = {
+  color: '#F87171',
+};

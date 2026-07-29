@@ -1,6 +1,27 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Stat } from '@/types';
 
+// Fallback commission rate used when a close isn't linked to an offer
+// (or the linked offer predates the per-offer commission_rate field).
+const DEFAULT_COMMISSION_RATE = 20;
+
+interface DateRangeOverride {
+  from: Date;
+  to: Date;
+}
+
+function resolveDateBounds(days: number, customRange?: DateRangeOverride) {
+  if (customRange) {
+    return {
+      startDateStr: customRange.from.toISOString().split('T')[0],
+      endDateStr: customRange.to.toISOString().split('T')[0] as string | undefined,
+    };
+  }
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  return { startDateStr: startDate.toISOString().split('T')[0], endDateStr: undefined as string | undefined };
+}
+
 export async function getStats(userId: string): Promise<Stat[]> {
   const { data, error } = await supabase
     .from('stats')
@@ -58,16 +79,21 @@ export interface ClosingRates {
   followUp: number;
 }
 
-export async function getClosingRates(userId: string, days: number = 30): Promise<ClosingRates> {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  const startDateStr = startDate.toISOString().split('T')[0];
+export async function getClosingRates(userId: string, days: number = 30, clientIds?: string[]): Promise<ClosingRates> {
+  if (clientIds && clientIds.length === 0) {
+    return { closing: 0, noShow: 0, followUp: 0 };
+  }
 
-  const { data: entries, error: entriesError } = await supabase
+  const { startDateStr } = resolveDateBounds(days);
+
+  let query = supabase
     .from('daily_entries')
     .select('r1_done, r2_done, closes_count')
     .eq('user_id', userId)
     .gte('entry_date', startDateStr);
+  if (clientIds) query = query.in('client_id', clientIds);
+
+  const { data: entries, error: entriesError } = await query;
 
   if (entriesError) {
     console.error('Error fetching daily entries:', entriesError);
@@ -89,16 +115,21 @@ export async function getClosingRates(userId: string, days: number = 30): Promis
   };
 }
 
-export async function getClosingMetrics(userId: string, days: number = 30) {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  const startDateStr = startDate.toISOString().split('T')[0];
+export async function getClosingMetrics(userId: string, days: number = 30, clientIds?: string[]) {
+  if (clientIds && clientIds.length === 0) {
+    return { totalContracted: 0, totalCollected: 0, count: 0 };
+  }
 
-  const { data: closes, error } = await supabase
+  const { startDateStr } = resolveDateBounds(days);
+
+  let query = supabase
     .from('closes')
     .select('contracted_amount, collected_amount')
     .eq('user_id', userId)
     .gte('close_date', startDateStr);
+  if (clientIds) query = query.in('client_id', clientIds);
+
+  const { data: closes, error } = await query;
 
   if (error) {
     console.error('Error fetching closes:', error);
@@ -115,17 +146,18 @@ export async function getClosingMetrics(userId: string, days: number = 30) {
   };
 }
 
-export async function getChartData(userId: string, days: number = 30) {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  const startDateStr = startDate.toISOString().split('T')[0];
+export async function getChartData(userId: string, days: number = 30, customRange?: DateRangeOverride) {
+  const { startDateStr, endDateStr } = resolveDateBounds(days, customRange);
 
-  const { data: entries, error } = await supabase
+  let query = supabase
     .from('daily_entries')
     .select('entry_date, closes_count')
     .eq('user_id', userId)
     .gte('entry_date', startDateStr)
     .order('entry_date', { ascending: true });
+  if (endDateStr) query = query.lte('entry_date', endDateStr);
+
+  const { data: entries, error } = await query;
 
   if (error) {
     console.error('Error fetching chart data:', error);
@@ -142,30 +174,70 @@ export async function getChartData(userId: string, days: number = 30) {
   const closingRateData = Object.values(byDate);
   const commissionsData = closingRateData.map(v => v * 1500);
 
-  console.log('Grouped chart data by date:', byDate);
-  console.log('Final chart arrays:', { closingRateData, commissionsData });
-
   return { closingRateData, commissionsData };
 }
 
-export async function getDashboardStats(userId: string, days: number = 30) {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  const startDateStr = startDate.toISOString().split('T')[0];
+export interface DailyEntryHistoryRow {
+  id: string;
+  entry_date: string;
+  r1_planned: number;
+  r1_done: number;
+  r2_planned: number;
+  r2_done: number;
+  closes_count: number;
+  clientName: string | null;
+}
+
+export async function getDailyEntriesHistory(userId: string, days: number = 30, customRange?: DateRangeOverride): Promise<DailyEntryHistoryRow[]> {
+  const { startDateStr, endDateStr } = resolveDateBounds(days, customRange);
+
+  let query = supabase
+    .from('daily_entries')
+    .select('id, entry_date, r1_planned, r1_done, r2_planned, r2_done, closes_count, clients(name)')
+    .eq('user_id', userId)
+    .gte('entry_date', startDateStr)
+    .order('entry_date', { ascending: false });
+  if (endDateStr) query = query.lte('entry_date', endDateStr);
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching daily entries history:', error);
+    return [];
+  }
+
+  return (data ?? []).map((e) => ({
+    id: e.id,
+    entry_date: e.entry_date,
+    r1_planned: e.r1_planned || 0,
+    r1_done: e.r1_done || 0,
+    r2_planned: e.r2_planned || 0,
+    r2_done: e.r2_done || 0,
+    closes_count: e.closes_count || 0,
+    clientName: e.clients?.name ?? null,
+  }));
+}
+
+export async function getDashboardStats(userId: string, days: number = 30, customRange?: DateRangeOverride) {
+  const { startDateStr, endDateStr } = resolveDateBounds(days, customRange);
 
   // Fetch daily entries
-  const { data: entries } = await supabase
+  let entriesQuery = supabase
     .from('daily_entries')
     .select('closes_count, r1_done, r2_done')
     .eq('user_id', userId)
     .gte('entry_date', startDateStr);
+  if (endDateStr) entriesQuery = entriesQuery.lte('entry_date', endDateStr);
+  const { data: entries } = await entriesQuery;
 
-  // Fetch closes for cash
-  const { data: closes } = await supabase
+  // Fetch closes for cash, along with each close's linked offer commission rate
+  let closesQuery = supabase
     .from('closes')
-    .select('contracted_amount')
+    .select('contracted_amount, offers(commission_rate)')
     .eq('user_id', userId)
     .gte('close_date', startDateStr);
+  if (endDateStr) closesQuery = closesQuery.lte('close_date', endDateStr);
+  const { data: closes } = await closesQuery;
 
   const entriesArr = entries || [];
   const closesArr = closes || [];
@@ -173,7 +245,12 @@ export async function getDashboardStats(userId: string, days: number = 30) {
   const totalCloses = entriesArr.reduce((sum, e) => sum + (e.closes_count || 0), 0);
   const totalRdvs = entriesArr.reduce((sum, e) => sum + ((e.r1_done || 0) + (e.r2_done || 0)), 0);
   const totalCash = closesArr.reduce((sum, c) => sum + (Number(c.contracted_amount) || 0), 0);
-  const commissions = Math.round(totalCash * 0.20);
+  const commissions = Math.round(
+    closesArr.reduce((sum, c) => {
+      const rate = Number(c.offers?.commission_rate ?? DEFAULT_COMMISSION_RATE);
+      return sum + (Number(c.contracted_amount) || 0) * (rate / 100);
+    }, 0)
+  );
 
   return {
     closes: totalCloses,
@@ -185,16 +262,21 @@ export async function getDashboardStats(userId: string, days: number = 30) {
   };
 }
 
-export async function getSummaryStats(userId: string, days: number = 30) {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  const startDateStr = startDate.toISOString().split('T')[0];
+export async function getSummaryStats(userId: string, days: number = 30, clientIds?: string[]) {
+  if (clientIds && clientIds.length === 0) {
+    return { closes: 0, r1Done: 0, r2Done: 0, followUp: 0 };
+  }
 
-  const { data: entries } = await supabase
+  const { startDateStr } = resolveDateBounds(days);
+
+  let query = supabase
     .from('daily_entries')
     .select('closes_count, r1_done, r2_done, r1_planned')
     .eq('user_id', userId)
     .gte('entry_date', startDateStr);
+  if (clientIds) query = query.in('client_id', clientIds);
+
+  const { data: entries } = await query;
 
   const entriesArr = entries || [];
 
@@ -211,16 +293,19 @@ export async function getSummaryStats(userId: string, days: number = 30) {
   };
 }
 
-export async function getFullPayRatio(userId: string, days: number = 30) {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  const startDateStr = startDate.toISOString().split('T')[0];
+export async function getFullPayRatio(userId: string, days: number = 30, clientIds?: string[]) {
+  if (clientIds && clientIds.length === 0) return 0;
 
-  const { data: closes } = await supabase
+  const { startDateStr } = resolveDateBounds(days);
+
+  let query = supabase
     .from('closes')
     .select('contracted_amount, collected_amount')
     .eq('user_id', userId)
     .gte('close_date', startDateStr);
+  if (clientIds) query = query.in('client_id', clientIds);
+
+  const { data: closes } = await query;
 
   const closesArr = closes || [];
   if (closesArr.length === 0) return 0;

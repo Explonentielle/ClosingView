@@ -1,15 +1,20 @@
 export const statsContainer = "flex flex-col gap-2 sm:gap-4 h-full overflow-hidden p-3 sm:p-4";
-export const filterSection = "flex gap-1 sm:gap-2 flex-wrap flex-shrink-0";
-export const filterButton = (active: boolean) => ({
-  background: active ? "#0EFF9C" : "#161d2e",
-  color: active ? "#0D1117" : "#8892a0",
-  border: active ? "none" : "0.5px solid #2a3a50",
-  fontSize: "0.625rem",
+export const filterSection = "flex items-center gap-2 sm:gap-3 flex-wrap flex-shrink-0";
+
+export const filterSelectStyle = {
+  background: "#161d2e",
+  color: "#FFFFFF",
+  border: "0.5px solid #2a3a50",
+  fontSize: "0.6875rem",
   fontWeight: 700,
-  padding: "4px 10px",
+  padding: "5px 8px",
   borderRadius: 6,
   cursor: "pointer",
-});
+};
+
+export const filterOptionStyle = {
+  background: "#161d2e",
+};
 
 export const gridSection = "grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 flex-shrink-0 flex-1 overflow-hidden";
 export const leftColSection = "flex flex-col gap-2 sm:gap-3 overflow-hidden";

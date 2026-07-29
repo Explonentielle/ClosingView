@@ -259,6 +259,7 @@ export type Database = {
         Row: {
           amount: number
           client_id: string
+          commission_rate: number
           created_at: string | null
           id: string
           max_installments: number | null
@@ -268,6 +269,7 @@ export type Database = {
         Insert: {
           amount: number
           client_id: string
+          commission_rate?: number
           created_at?: string | null
           id?: string
           max_installments?: number | null
@@ -277,6 +279,7 @@ export type Database = {
         Update: {
           amount?: number
           client_id?: string
+          commission_rate?: number
           created_at?: string | null
           id?: string
           max_installments?: number | null
@@ -351,6 +354,8 @@ export type Database = {
           streak: number | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          target_cash_monthly: number
+          target_closes_monthly: number
           updated_at: string | null
         }
         Insert: {
@@ -374,6 +379,8 @@ export type Database = {
           streak?: number | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          target_cash_monthly?: number
+          target_closes_monthly?: number
           updated_at?: string | null
         }
         Update: {
@@ -397,6 +404,8 @@ export type Database = {
           streak?: number | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          target_cash_monthly?: number
+          target_closes_monthly?: number
           updated_at?: string | null
         }
         Relationships: []

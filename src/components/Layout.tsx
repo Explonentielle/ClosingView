@@ -7,6 +7,7 @@ import { responsiveClass } from "@/lib/responsive";
 import { MessagingProvider } from "@/hooks/useMessaging";
 import PrivateMessaging from "@/components/messaging/PrivateMessaging";
 import OnboardingFlow from "@/components/OnboardingFlow";
+import { useProfile } from "@/hooks/useProfile";
 
 const titleMap: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -23,6 +24,7 @@ const Layout = () => {
   const title = titleMap[pathname] ?? "Closing View";
   const isDashboard = pathname.startsWith("/dashboard");
   const [openSaisir, setOpenSaisir] = useState(false);
+  const { profile } = useProfile();
 
   return (
     <MessagingProvider>
@@ -50,7 +52,7 @@ const Layout = () => {
                 style={{ borderColor: "#0EFF9C55", color: "#0EFF9C", background: "#0EFF9C12" }}
               >
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#0EFF9C" }} />
-                SCORE 74
+                SCORE {profile?.close_score ?? 0}
               </div>
               <ProfileDropdown />
             </div>

@@ -23,7 +23,7 @@ export async function createClient(clientData: {
   initials: string;
   color: string;
   total_amount: number;
-  offers: Array<{ name: string; amount: number; max_installments: number }>;
+  offers: Array<{ name: string; amount: number; max_installments: number; commission_rate: number }>;
 }): Promise<Client | null> {
   const { offers, ...clientPayload } = clientData;
 
@@ -46,6 +46,7 @@ export async function createClient(clientData: {
       name: o.name,
       amount: o.amount,
       max_installments: o.max_installments || 1,
+      commission_rate: o.commission_rate,
     }));
 
     const { error: offersError } = await supabase
@@ -103,4 +104,74 @@ export async function getClientOffers(clientId: string): Promise<Offer[]> {
   }
 
   return data ?? [];
+}
+
+export async function createOffer(offer: {
+  client_id: string;
+  user_id: string;
+  name: string;
+  amount: number;
+  max_installments: number;
+  commission_rate: number;
+}): Promise<Offer | null> {
+  const { data, error } = await supabase
+    .from('offers')
+    .insert([offer])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating offer:', error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function updateOffer(id: string, updates: Partial<Offer>): Promise<Offer | null> {
+  const { data, error } = await supabase
+    .from('offers')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating offer:', error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function deleteOffer(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('offers')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting offer:', error);
+    return false;
+  }
+
+  return true;
+}
+
+export async function getFilteredClientIds(
+  userId: string,
+  filters: { niche?: string; type?: string }
+): Promise<string[]> {
+  let query = supabase.from('clients').select('id').eq('user_id', userId);
+  if (filters.niche) query = query.eq('niche', filters.niche);
+  if (filters.type) query = query.contains('type', [filters.type]);
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching filtered clients:', error.message);
+    return [];
+  }
+
+  return (data ?? []).map((c) => c.id);
 }

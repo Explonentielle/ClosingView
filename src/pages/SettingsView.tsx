@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Bell, Shield, Lock } from "lucide-react";
+import { User, Bell, Shield, Lock, Target } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -19,6 +19,8 @@ const SettingsView = () => {
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [experienceYears, setExperienceYears] = useState(0);
+  const [targetCash, setTargetCash] = useState(15000);
+  const [targetCloses, setTargetCloses] = useState(10);
 
   useEffect(() => {
     if (profile) {
@@ -28,6 +30,8 @@ const SettingsView = () => {
       setPhone(profile.phone || "");
       setCity(profile.city || "");
       setExperienceYears(profile.experience_years || 0);
+      setTargetCash(profile.target_cash_monthly ?? 15000);
+      setTargetCloses(profile.target_closes_monthly ?? 10);
     }
   }, [profile]);
 
@@ -41,6 +45,8 @@ const SettingsView = () => {
       phone,
       city,
       experience_years: experienceYears,
+      target_cash_monthly: targetCash,
+      target_closes_monthly: targetCloses,
     });
     setSaving(false);
 
@@ -132,6 +138,35 @@ const SettingsView = () => {
             </div>
           </>
         )}
+      </div>
+
+      <div className="glass-card p-4 sm:p-6 space-y-3 sm:space-y-4">
+        <div className="flex items-center gap-3 mb-2">
+          <Target size={16} className="sm:w-[18px] sm:h-[18px] text-primary" />
+          <h3 className="font-semibold text-sm sm:text-base">Objectifs mensuels</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div>
+            <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">Cash cible (€)</label>
+            <input
+              type="number"
+              min="0"
+              value={targetCash}
+              onChange={(e) => setTargetCash(Number(e.target.value))}
+              className={inputClass + " text-xs sm:text-sm"}
+            />
+          </div>
+          <div>
+            <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">Nb. closes cible</label>
+            <input
+              type="number"
+              min="0"
+              value={targetCloses}
+              onChange={(e) => setTargetCloses(Number(e.target.value))}
+              className={inputClass + " text-xs sm:text-sm"}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="glass-card p-4 sm:p-6 space-y-3 sm:space-y-4">

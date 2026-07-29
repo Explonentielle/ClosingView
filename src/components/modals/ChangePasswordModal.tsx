@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { X, Eye, EyeOff } from "lucide-react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { updatePassword } from "@/services";
+import { ModalOverlay } from "./ModalOverlay";
 
 interface ChangePasswordModalProps {
   open: boolean;
@@ -15,6 +17,15 @@ export const ChangePasswordModal = ({ open, onClose }: ChangePasswordModalProps)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const handleClose = () => {
+    if (!loading && !success) {
+      setNewPassword("");
+      setConfirmPassword("");
+      setError(null);
+      onClose();
+    }
+  };
 
   if (!open) return null;
 
@@ -62,27 +73,18 @@ export const ChangePasswordModal = ({ open, onClose }: ChangePasswordModalProps)
     }
   };
 
-  const handleClose = () => {
-    if (!loading && !success) {
-      setNewPassword("");
-      setConfirmPassword("");
-      setError(null);
-      onClose();
-    }
-  };
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
-      style={{ background: "rgba(13,17,23,0.75)", backdropFilter: "blur(8px)" }}
-      onClick={handleClose}
+    <ModalOverlay
+      open={open}
+      onClose={handleClose}
+      overlayClassName="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+      overlayStyle={{ background: "rgba(13,17,23,0.75)", backdropFilter: "blur(8px)" }}
+      contentClassName="w-full max-w-[400px] rounded-[14px] border border-[#2a3a50] p-6 bg-[#161d2e]"
     >
-      <div
-        className="w-full max-w-[400px] rounded-[14px] border border-[#2a3a50] p-6 bg-[#161d2e]"
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[14px] font-bold text-white">Changer le mot de passe</h2>
+          <DialogPrimitive.Title asChild>
+            <h2 className="text-[14px] font-bold text-white">Changer le mot de passe</h2>
+          </DialogPrimitive.Title>
           <button
             onClick={handleClose}
             disabled={loading || success}
@@ -188,7 +190,6 @@ export const ChangePasswordModal = ({ open, onClose }: ChangePasswordModalProps)
             <p className="text-[12px] text-[#8892a0]">Fermeture...</p>
           </div>
         )}
-      </div>
-    </div>
+    </ModalOverlay>
   );
 };

@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { X, Check } from "lucide-react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useClientsList } from "@/hooks/useClientsList";
+import { getClientOffers } from "@/services/clients";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { Offer } from "@/types";
+import { ModalOverlay } from "./ModalOverlay";
 
 type Props = { open: boolean; onClose: () => void };
 
@@ -25,12 +29,26 @@ const SaisirModal = ({ open, onClose }: Props) => {
   const [reglement, setReglement] = useState<"X1" | "X2" | "X3" | "X6" | "X10" | null>(null);
   const [closedAt, setClosedAt] = useState<"R1" | "R2" | null>(null);
   const [dateR2, setDateR2] = useState("");
+  const [clientOffers, setClientOffers] = useState<Offer[]>([]);
+  const [offerId, setOfferId] = useState<string>("");
 
   useEffect(() => {
     if (open && clients.length > 0 && !clientId) {
       setClientId(String(clients[0].id));
     }
   }, [open, clients, clientId]);
+
+  useEffect(() => {
+    if (!open || !clientId) {
+      setClientOffers([]);
+      setOfferId("");
+      return;
+    }
+    getClientOffers(clientId).then((offers) => {
+      setClientOffers(offers);
+      setOfferId(offers[0]?.id ?? "");
+    });
+  }, [open, clientId]);
 
   useEffect(() => {
     if (open) {
@@ -78,6 +96,7 @@ const SaisirModal = ({ open, onClose }: Props) => {
           .insert([{
             user_id: user.id,
             client_id: clientId,
+            offer_id: offerId || null,
             contracted_amount: contracte,
             collected_amount: collecte,
             installments: reglement ? parseInt(reglement.substring(1)) : 1,
@@ -101,21 +120,23 @@ const SaisirModal = ({ open, onClose }: Props) => {
   const reglements = ["X1", "X2", "X3", "X6", "X10"] as const;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
-      style={{ background: "rgba(13,17,23,0.75)", backdropFilter: "blur(8px)" }}
-      onClick={onClose}
+    <ModalOverlay
+      open={open}
+      onClose={onClose}
+      overlayClassName="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+      overlayStyle={{ background: "rgba(13,17,23,0.75)", backdropFilter: "blur(8px)" }}
+      contentClassName="w-full max-w-[460px] rounded-[14px] border-hair p-5"
+      contentStyle={{ background: "#161d2e", borderColor: "#2a3a50" }}
     >
-      <div
-        className="w-full max-w-[460px] rounded-[14px] border-hair p-5"
-        style={{ background: "#161d2e", borderColor: "#2a3a50" }}
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[14px] font-bold text-white">
-            {step === "ok" ? "Confirmation" : `Saisie journée — Étape ${step}/2`}
-          </h2>
-          <button onClick={onClose} className="text-muted hover:text-white"><X size={16} /></button>
+          <DialogPrimitive.Title asChild>
+            <h2 className="text-[14px] font-bold text-white">
+              {step === "ok" ? "Confirmation" : `Saisie journée — Étape ${step}/2`}
+            </h2>
+          </DialogPrimitive.Title>
+          <DialogPrimitive.Close asChild>
+            <button className="text-muted hover:text-white"><X size={16} /></button>
+          </DialogPrimitive.Close>
         </div>
 
         {step === 1 && (
@@ -176,6 +197,24 @@ const SaisirModal = ({ open, onClose }: Props) => {
 
         {step === 2 && (
           <div className="space-y-3">
+            <label className="block">
+              <span className="text-[10px] uppercase tracking-wide font-bold" style={{ color: "#8892a0" }}>Offre</span>
+              <select
+                value={offerId}
+                onChange={(e) => setOfferId(e.target.value)}
+                disabled={clientOffers.length === 0}
+                className="w-full mt-1 h-9 rounded-[10px] border-hair px-3 text-[12px] text-white bg-transparent"
+                style={{ background: "#0D1117", borderColor: "#2a3a50" }}
+              >
+                {clientOffers.length === 0 && <option value="">Aucune offre pour ce client</option>}
+                {clientOffers.map(o => (
+                  <option key={o.id} value={o.id} style={{ background: "#0D1117" }}>
+                    {o.name} — {Number(o.amount).toLocaleString("fr-FR")}€ — {o.commission_rate}% comm.
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <div className="grid grid-cols-2 gap-2.5">
               <label className="block">
                 <span className="text-[10px] uppercase tracking-wide font-bold" style={{ color: "#8892a0" }}>Contracté (€)</span>
@@ -270,15 +309,15 @@ const SaisirModal = ({ open, onClose }: Props) => {
             <p className="text-[11px] mb-5" style={{ color: "#8892a0" }}>
               Tes performances ont été mises à jour.
             </p>
-            <button
-              onClick={onClose}
-              className="px-5 h-9 rounded-[10px] font-bold text-[11px]"
-              style={{ background: "#0EFF9C", color: "#0D1117" }}
-            >Retour au dashboard</button>
+            <DialogPrimitive.Close asChild>
+              <button
+                className="px-5 h-9 rounded-[10px] font-bold text-[11px]"
+                style={{ background: "#0EFF9C", color: "#0D1117" }}
+              >Retour au dashboard</button>
+            </DialogPrimitive.Close>
           </div>
         )}
-      </div>
-    </div>
+    </ModalOverlay>
   );
 };
 

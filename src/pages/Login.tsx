@@ -20,6 +20,7 @@ const Login = () => {
     setErr(null);
     setLoading(true);
     const session = await signIn(email, password);
+    console.log(session)
     setLoading(false);
     if (!session) {
       setErr("Email ou mot de passe incorrect");

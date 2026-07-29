@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { getClosingRates, getClosingMetrics, getSummaryStats, getFullPayRatio } from "@/services";
-import type { ClosingRates } from "@/services";
+import { getClosingRates, getClosingMetrics, getSummaryStats, getFullPayRatio, computeCloseScore, profileLabel, getFilteredClientIds } from "@/services";
+import type { ClosingRates, CloseScoreResult } from "@/services";
+import { NICHES } from "@/lib/niches";
 
-const FILTERS = ["Global", "Niche", "Infopreneur", "Challenge"];
+const TYPE_OPTIONS = [
+  { value: "", label: "Tous" },
+  { value: "VSL", label: "VSL" },
+  { value: "Challenge", label: "Challenge" },
+];
 
 const KpiCell = ({ label, value, valueColor = "#FFFFFF" }: { label: string; value: string; valueColor?: string }) => (
   <div style={{ background: "#161d2e", border: "0.5px solid #2a3a50", borderRadius: 10, padding: "8px 10px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
@@ -35,14 +40,10 @@ const Gauge = ({ pct = 60 }: { pct?: number }) => {
   );
 };
 
-const Radar = () => {
-  const pts = [
-    { label: "Closing", v: 93, ang: -90 },
-    { label: "Cash", v: 80, ang: -18 },
-    { label: "Régularité", v: 80, ang: 54 },
-    { label: "Cycle de vente", v: 73, ang: 126 },
-    { label: "Objectifs", v: 70, ang: 198 },
-  ];
+const RADAR_ANGLES = [-90, -18, 54, 126, 198];
+
+const Radar = ({ axes }: { axes: { label: string; v: number }[] }) => {
+  const pts = axes.map((a, i) => ({ ...a, ang: RADAR_ANGLES[i] ?? 0 }));
   const R = 95;
   const toXY = (ang: number, r: number) => {
     const a = (ang * Math.PI) / 180;
@@ -81,7 +82,7 @@ const Radar = () => {
             </g>
           );
         })}
-        <text textAnchor="middle" dominantBaseline="middle" fill="#0EFF9C" fontSize={32} fontWeight={900} fontFamily="Inter, sans-serif">74</text>
+        <circle cx={0} cy={0} r={3} fill="#0EFF9C" />
       </g>
     </svg>
   );
@@ -92,12 +93,24 @@ import * as S from './Stats.styles';
 
 const Stats = () => {
   const { user } = useAuth();
-  const [filter, setFilter] = useState("Global");
+  const [nicheFilter, setNicheFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [trackOpen, setTrackOpen] = useState(false);
   const [rates, setRates] = useState<ClosingRates>({ closing: 0, noShow: 0, followUp: 0 });
   const [metrics, setMetrics] = useState({ totalContracted: 0, totalCollected: 0, count: 0 });
   const [summary, setSummary] = useState({ closes: 0, r1Done: 0, r2Done: 0, followUp: 0 });
   const [fullPayRatio, setFullPayRatio] = useState(0);
+  const [closeScore, setCloseScore] = useState<CloseScoreResult>({
+    score: 0,
+    axes: [
+      { label: "Closing", v: 0 },
+      { label: "Cash", v: 0 },
+      { label: "Régularité", v: 0 },
+      { label: "Cycle de vente", v: 0 },
+      { label: "Objectifs", v: 0 },
+    ],
+    avgCycleDays: null,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -105,38 +118,62 @@ const Stats = () => {
 
     const fetchData = async () => {
       setLoading(true);
-      const [r, m, s, f] = await Promise.all([
-        getClosingRates(user.id, 30),
-        getClosingMetrics(user.id, 30),
-        getSummaryStats(user.id, 30),
-        getFullPayRatio(user.id, 30),
+
+      const clientIds = nicheFilter || typeFilter
+        ? await getFilteredClientIds(user.id, { niche: nicheFilter || undefined, type: typeFilter || undefined })
+        : undefined;
+
+      const [r, m, s, f, cs] = await Promise.all([
+        getClosingRates(user.id, 30, clientIds),
+        getClosingMetrics(user.id, 30, clientIds),
+        getSummaryStats(user.id, 30, clientIds),
+        getFullPayRatio(user.id, 30, clientIds),
+        computeCloseScore(user.id, 90, clientIds),
       ]);
       setRates(r);
       setMetrics(m);
       setSummary(s);
       setFullPayRatio(f);
+      setCloseScore(cs);
       setLoading(false);
     };
 
     fetchData();
-  }, [user, filter]);
+  }, [user, nicheFilter, typeFilter]);
 
   return (
     <div className={S.statsContainer}>
       {/* Section 1 — Filtres */}
       <div className={S.filterSection}>
-        {FILTERS.map((f) => {
-          const active = filter === f;
-          return (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              style={S.filterButton(active)}
+        <select
+          value={nicheFilter}
+          onChange={(e) => setNicheFilter(e.target.value)}
+          style={S.filterSelectStyle}
+        >
+          <option value="">Toutes les niches</option>
+          {NICHES.map((n) => (
+            <option key={n} value={n} style={S.filterOptionStyle}>{n}</option>
+          ))}
+        </select>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          {TYPE_OPTIONS.map((opt) => (
+            <label
+              key={opt.label}
+              className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold cursor-pointer"
+              style={{ color: typeFilter === opt.value ? "#0EFF9C" : "#8892a0" }}
             >
-              {f}
-            </button>
-          );
-        })}
+              <input
+                type="radio"
+                name="statsTypeFilter"
+                checked={typeFilter === opt.value}
+                onChange={() => setTypeFilter(opt.value)}
+                style={{ accentColor: "#0EFF9C" }}
+              />
+              {opt.label}
+            </label>
+          ))}
+        </div>
       </div>
 
       {/* Section 2 — Grid 2 cols */}
@@ -147,7 +184,7 @@ const Stats = () => {
             <KpiCell label="€ contracté" value={`${metrics.totalContracted.toLocaleString("fr-FR")}€`} />
             <KpiCell label="€ collecté" value={`${metrics.totalCollected.toLocaleString("fr-FR")}€`} valueColor="#0EFF9C" />
             <KpiCell label="Nb. closes" value={String(metrics.count)} />
-            <KpiCell label="Délai" value={metrics.count > 0 ? "~2.3j" : "—"} />
+            <KpiCell label="Délai" value={closeScore.avgCycleDays != null ? `${closeScore.avgCycleDays}j` : "—"} />
           </div>
           <div className={S.gaugeSection}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -172,10 +209,11 @@ const Stats = () => {
         <div className={S.closeScoreSection}>
           <div style={{ color: "#0EFF9C", fontSize: "clamp(0.625rem, 2vw, 0.75rem)", fontWeight: 800, letterSpacing: "3.5px" }}>CLOSE SCORE</div>
           <div style={{ width: 24, height: 1, background: "#0EFF9C", opacity: 0.3, marginTop: 2 }} />
-          <div style={{ width: "100%", height: "100%", minHeight: "150px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Radar />
+          <div style={{ color: "#0EFF9C", fontSize: "clamp(1.75rem, 5vw, 2.25rem)", fontWeight: 900, lineHeight: 1, marginTop: 6, flexShrink: 0 }}>{closeScore.score}</div>
+          <div style={{ width: "100%", height: "100%", minHeight: "130px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Radar axes={closeScore.axes} />
           </div>
-          <div style={{ color: "#0EFF9C", fontSize: "0.625rem", fontWeight: 700, letterSpacing: "3.5px", opacity: 0.65, marginTop: 2, flexShrink: 0 }}>BON PROFIL</div>
+          <div style={{ color: "#0EFF9C", fontSize: "0.625rem", fontWeight: 700, letterSpacing: "3.5px", opacity: 0.65, marginTop: 2, flexShrink: 0 }}>{profileLabel(closeScore.score)}</div>
         </div>
       </div>
 
@@ -221,7 +259,15 @@ const Stats = () => {
           <span>Générer mon Track Record (PDF)</span>
         </button>
       </div>
-      <TrackRecordModal open={trackOpen} onClose={() => setTrackOpen(false)} rates={rates} />
+      <TrackRecordModal
+        open={trackOpen}
+        onClose={() => setTrackOpen(false)}
+        rates={{
+          noShow: { v: rates.noShow, x: summary.r1Done, y: summary.r1Done + summary.r2Done },
+          followUp: { v: rates.followUp, deals: summary.r2Done },
+          closing: { v: rates.closing, x: summary.closes, y: summary.r1Done + summary.r2Done },
+        }}
+      />
     </div>
   );
 };

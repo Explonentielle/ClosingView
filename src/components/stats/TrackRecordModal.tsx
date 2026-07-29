@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { computeCloseScore, profileLabel, type CloseScoreResult } from "@/services";
+import { ModalOverlay } from "@/components/modals/ModalOverlay";
 
 type Props = { open: boolean; onClose: () => void; rates: { noShow: { v: number; x: number; y: number }; followUp: { v: number; deals: number }; closing: { v: number; x: number; y: number } } };
 
@@ -23,13 +26,26 @@ type CloseRow = {
   installments: number | null;
   client_id: string | null;
   offer_id: string | null;
+  offers: { commission_rate: number } | null;
 };
+
+// Fallback commission rate for closes without a linked offer, matching services/stats.ts
+const DEFAULT_COMMISSION_RATE = 20;
 
 const fmtEUR = (n: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
 const today = () => new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
 
-const profileLabel = (score: number) =>
-  score >= 80 ? "EXCELLENT PROFIL" : score >= 65 ? "BON PROFIL" : score >= 50 ? "PROFIL EN COURS" : "DÉBUTANT";
+const EMPTY_CLOSE_SCORE: CloseScoreResult = {
+  score: 0,
+  axes: [
+    { label: "Closing", v: 0 },
+    { label: "Cash", v: 0 },
+    { label: "Régularité", v: 0 },
+    { label: "Cycle de vente", v: 0 },
+    { label: "Objectifs", v: 0 },
+  ],
+  avgCycleDays: null,
+};
 
 const TrackRecordModal = ({ open, onClose, rates }: Props) => {
   const { user } = useAuth();
@@ -37,7 +53,7 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
   const [closes, setCloses] = useState<CloseRow[]>([]);
   const [clientsMap, setClientsMap] = useState<Record<string, string>>({});
   const [offersMap, setOffersMap] = useState<Record<string, string>>({});
-  const [entriesDays, setEntriesDays] = useState(0);
+  const [closeScore, setCloseScore] = useState<CloseScoreResult>(EMPTY_CLOSE_SCORE);
 
   useEffect(() => {
     if (!open || !user) return;
@@ -45,7 +61,7 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
       const { data: p } = await supabase.from("profiles").select("display_name,first_name,last_name,email,city,experience_years,close_score").eq("id", user.id).maybeSingle();
       setProfile(p as Profile);
       const since = new Date(); since.setMonth(since.getMonth() - 12);
-      const { data: cs } = await supabase.from("closes").select("close_date,created_at,contracted_amount,collected_amount,closed_at_round,installments,client_id,offer_id").eq("user_id", user.id).gte("created_at", since.toISOString()).order("created_at", { ascending: false });
+      const { data: cs } = await supabase.from("closes").select("close_date,created_at,contracted_amount,collected_amount,closed_at_round,installments,client_id,offer_id,offers(commission_rate)").eq("user_id", user.id).gte("created_at", since.toISOString()).order("created_at", { ascending: false });
       const rows = (cs || []) as CloseRow[];
       setCloses(rows);
       const cIds = [...new Set(rows.map(r => r.client_id).filter(Boolean) as string[])];
@@ -58,10 +74,7 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
         const { data: ofs } = await supabase.from("offers").select("id,name").in("id", oIds);
         setOffersMap(Object.fromEntries((ofs || []).map((o: any) => [o.id, o.name])));
       }
-      const since30 = new Date(); since30.setDate(since30.getDate() - 30);
-      const { data: de } = await supabase.from("daily_entries").select("entry_date").eq("user_id", user.id).gte("entry_date", since30.toISOString().slice(0, 10));
-      const days = new Set((de || []).map((e: any) => e.entry_date)).size;
-      setEntriesDays(days);
+      setCloseScore(await computeCloseScore(user.id));
     })();
   }, [open, user]);
 
@@ -69,10 +82,13 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
 
   const displayName = profile?.display_name || [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || profile?.email?.split("@")[0] || "—";
   const initials = (displayName.split(" ").map(s => s[0]).join("").slice(0, 2) || "U").toUpperCase();
-  const score = profile?.close_score || 0;
+  const score = closeScore.score;
 
   const cashCollected = closes.reduce((s, r) => s + Number(r.collected_amount || 0), 0);
-  const commissions = cashCollected * 0.1;
+  const commissions = closes.reduce((s, r) => {
+    const rate = Number(r.offers?.commission_rate ?? DEFAULT_COMMISSION_RATE);
+    return s + Number(r.contracted_amount || 0) * (rate / 100);
+  }, 0);
   const closeCount = closes.length;
   const closingRate = rates.closing.v;
 
@@ -94,16 +110,8 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
   const last = monthly[monthly.length - 1].total;
   const progression = first > 0 ? Math.round(((last - first) / first) * 100) : 0;
 
-  // Radar axes
-  const regularite = Math.round((entriesDays / 30) * 100);
-  const cashScore = Math.min(100, Math.round((cashCollected / Math.max(1, maxMonth * 5)) * 100));
-  const axes = [
-    { label: "Closing", v: Math.round(closingRate) },
-    { label: "Cash", v: cashScore },
-    { label: "Régularité", v: regularite },
-    { label: "Cycle de vente", v: 70 },
-    { label: "Objectifs", v: 65 },
-  ];
+  // Radar axes — computed once by services/closeScore.ts, shared with Stats.tsx
+  const axes = closeScore.axes;
   const toXY = (ang: number, r: number) => [Math.cos(ang) * r, Math.sin(ang) * r] as const;
   const R = 65;
   const pts = axes.map((a, i) => ({ ...a, ang: -Math.PI / 2 + (i * 2 * Math.PI) / axes.length }));
@@ -113,16 +121,14 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
   const top10 = closes.slice(0, 10);
 
   return (
-    <div
-      id="track-record-modal-overlay"
-      onClick={onClose}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" }}
+    <ModalOverlay
+      open={open}
+      onClose={onClose}
+      overlayId="track-record-modal-overlay"
+      overlayStyle={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" }}
+      contentClassName="track-record-modal"
+      contentStyle={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 740, maxHeight: "90vh", overflowY: "auto", color: "#0f172a", fontFamily: "Inter, sans-serif" }}
     >
-      <div
-        className="track-record-modal"
-        onClick={e => e.stopPropagation()}
-        style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 740, maxHeight: "90vh", overflowY: "auto", color: "#0f172a", fontFamily: "Inter, sans-serif" }}
-      >
         {/* BLOC 1 - HEADER */}
         <div style={{ background: "#0f172a", padding: "32px 40px", borderRadius: "16px 16px 0 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
           <div>
@@ -130,7 +136,9 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0EFF9C" strokeWidth={2}><polygon points="12,2 22,7 22,17 12,22 2,17 2,7" /></svg>
               <span style={{ color: "#0EFF9C", fontSize: 12, fontWeight: 800 }}>Closing View</span>
             </div>
-            <div style={{ color: "#fff", fontSize: 22, fontWeight: 900, lineHeight: 1.1 }}>Track Record</div>
+            <DialogPrimitive.Title asChild>
+              <div style={{ color: "#fff", fontSize: 22, fontWeight: 900, lineHeight: 1.1 }}>Track Record</div>
+            </DialogPrimitive.Title>
             <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 6 }}>{displayName} · Généré le {today()}</div>
           </div>
           <div style={{ background: "#0EFF9C18", border: "1px solid #0EFF9C33", borderRadius: 12, padding: "12px 18px", textAlign: "center", minWidth: 130 }}>
@@ -185,6 +193,7 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
             <div className="track-record-radar" style={{ background: "#060b14", border: "1px solid #0EFF9C33", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div style={{ color: "#0EFF9C", fontSize: 8, letterSpacing: "3px", fontWeight: 800 }}>CLOSE SCORE</div>
               <div style={{ width: 18, height: 1, background: "#0EFF9C", opacity: 0.3, marginTop: 4 }} />
+              <div style={{ color: "#0EFF9C", fontSize: 22, fontWeight: 900, lineHeight: 1, marginTop: 4 }}>{score}</div>
               <svg viewBox="0 0 220 185" style={{ width: "100%", maxHeight: 175 }}>
                 <g transform="translate(110 95)">
                   {[R, R * 0.66, R * 0.33].map((r, i) => <polygon key={i} points={ring(r)} fill="none" stroke="#1e2b3a" strokeWidth={0.8} />)}
@@ -200,7 +209,7 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
                       </g>
                     );
                   })}
-                  <text textAnchor="middle" dominantBaseline="middle" fill="#0EFF9C" fontSize={20} fontWeight={900}>{score}</text>
+                  <circle cx={0} cy={0} r={2.5} fill="#0EFF9C" />
                 </g>
               </svg>
               <div style={{ color: "#0EFF9C", fontSize: 7, opacity: 0.6, letterSpacing: "2px", fontWeight: 700 }}>{profileLabel(score)}</div>
@@ -296,7 +305,9 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0a1a0f" strokeWidth={2.5}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
               Télécharger en PDF
             </button>
-            <button onClick={onClose} style={{ background: "#f1f5f9", color: "#64748b", border: "none", borderRadius: 10, padding: "12px 18px", fontSize: 13, cursor: "pointer" }}>Fermer</button>
+            <DialogPrimitive.Close asChild>
+              <button style={{ background: "#f1f5f9", color: "#64748b", border: "none", borderRadius: 10, padding: "12px 18px", fontSize: 13, cursor: "pointer" }}>Fermer</button>
+            </DialogPrimitive.Close>
           </div>
         </div>
 
@@ -305,8 +316,7 @@ const TrackRecordModal = ({ open, onClose, rates }: Props) => {
           <span style={{ color: "#64748b", fontSize: 11, fontWeight: 600 }}>Closing View · app.closingview.io</span>
           <span style={{ color: "#94a3b8", fontSize: 11 }}>Document certifié · {today()}</span>
         </div>
-      </div>
-    </div>
+    </ModalOverlay>
   );
 };
 

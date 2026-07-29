@@ -5,53 +5,76 @@ import ObjectiveBar from "@/components/dashboard/ObjectiveBar";
 import InteractiveChart from "@/components/dashboard/InteractiveChart";
 import DatePickerFilter from "@/components/dashboard/DatePickerFilter";
 import StreakBanner from "@/components/dashboard/StreakBanner";
+import DailyEntriesHistory from "@/components/dashboard/DailyEntriesHistory";
 import { Range, monthLabels } from "@/data/mocks";
 import { useAuth } from "@/hooks/useAuth";
-import { getChartData, getDashboardStats } from "@/services";
+import { useProfile } from "@/hooks/useProfile";
+import { getChartData, getDashboardStats, getDailyEntriesHistory } from "@/services";
+import type { DailyEntryHistoryRow } from "@/services";
 import { responsiveClass } from "@/lib/responsive";
 import * as S from './Dashboard.styles';
 
 const RANGES: Range[] = ["7j", "30j", "3m", "1a"];
+const RANGE_DAYS: Record<Range, number> = { "7j": 7, "30j": 30, "3m": 90, "1a": 365 };
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [range, setRange] = useState<Range>("30j");
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const isCustom = !!(customRange?.from && customRange?.to);
 
-  const [d, setD] = useState({ closes: 0, taux: '0%', cash: '0€', commissions: '0€', cashTrend: 0, closingTrend: 0 });
+  const [d, setD] = useState({ closes: 0, taux: '0%', cash: '0€', commissions: '0€', commRatePct: 20, cashTrend: 0, closingTrend: 0 });
   const [loading, setLoading] = useState(true);
+  const targetCash = profile?.target_cash_monthly ?? 15000;
+  const targetCloses = profile?.target_closes_monthly ?? 10;
 
   const [chartData, setChartData] = useState({ closingRateData: [] as number[], commissionsData: [] as number[] });
   const [chartsLoading, setChartsLoading] = useState(true);
+
+  const [entriesHistory, setEntriesHistory] = useState<DailyEntryHistoryRow[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
       setLoading(true);
+      setChartsLoading(true);
+      setHistoryLoading(true);
+
+      const days = RANGE_DAYS[range];
+      const rangeOverride = isCustom && customRange?.from && customRange?.to
+        ? { from: customRange.from, to: customRange.to }
+        : undefined;
 
       // Fetch dashboard KPI stats
-      const stats = await getDashboardStats(user.id, 30);
+      const stats = await getDashboardStats(user.id, days, rangeOverride);
       setD({
         closes: stats.closes,
         taux: `${stats.taux}%`,
         cash: `${stats.cash.toLocaleString('fr-FR')}€`,
         commissions: `${stats.commissions.toLocaleString('fr-FR')}€`,
+        commRatePct: stats.cash > 0 ? Math.round((stats.commissions / stats.cash) * 100) : 20,
         cashTrend: stats.cashTrend,
         closingTrend: stats.closingTrend,
       });
 
       // Fetch chart data
-      const chartDataResult = await getChartData(user.id, 30);
+      const chartDataResult = await getChartData(user.id, days, rangeOverride);
       setChartData(chartDataResult);
       setChartsLoading(false);
+
+      // Fetch daily entries history
+      const history = await getDailyEntriesHistory(user.id, days, rangeOverride);
+      setEntriesHistory(history);
+      setHistoryLoading(false);
 
       setLoading(false);
     };
 
     fetchData();
-  }, [user]);
+  }, [user, range, isCustom, customRange]);
 
   const commAvg = useMemo(() => {
     const data = chartData.commissionsData;
@@ -102,14 +125,14 @@ const Dashboard = () => {
         <KpiCard label="Cash généré"  value={d.cash}        badge={{ text: `+${d.cashTrend}%`, tone: "green", dir: "up" }} />
         <KpiCard label="Nb. closes"   value={String(d.closes)} sub="ce mois" />
         <KpiCard label="Taux closing" value={d.taux}        badge={{ text: `${d.closingTrend}pt`, tone: "yellow", dir: "down" }} />
-        <KpiCard label="Commissions"  value={d.commissions} sub="20% comm." valueColor="#0EFF9C" />
+        <KpiCard label="Commissions"  value={d.commissions} sub={`${d.commRatePct}% comm.`} valueColor="#0EFF9C" />
       </div>
 
       {/* 3 Objectifs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <ObjectiveBar
           label="Cash généré"
-          pct={Math.min(100, (d.cash.replace(/[^\d]/g, '') ? parseInt(d.cash.replace(/[^\d]/g, '')) / 15000 * 100 : 0))}
+          pct={Math.min(100, (d.cash.replace(/[^\d]/g, '') ? parseInt(d.cash.replace(/[^\d]/g, '')) / targetCash * 100 : 0))}
           display={`${d.cash}`}
           color="green"
         />
@@ -121,8 +144,8 @@ const Dashboard = () => {
         />
         <ObjectiveBar
           label="Nb. closes"
-          pct={Math.min(100, (d.closes / 10) * 100)}
-          display={`${d.closes}/10`}
+          pct={Math.min(100, (d.closes / targetCloses) * 100)}
+          display={`${d.closes}/${targetCloses}`}
           color="blue"
         />
       </div>
@@ -181,6 +204,8 @@ const Dashboard = () => {
           </>
         )}
       </div>
+
+      <DailyEntriesHistory entries={entriesHistory} loading={historyLoading} />
     </div>
   );
 };

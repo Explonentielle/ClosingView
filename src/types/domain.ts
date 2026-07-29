@@ -19,6 +19,7 @@ export interface Offer {
   name: string;
   amount: number;
   max_installments: number;
+  commission_rate: number;
   created_at: string;
 }
 
@@ -50,9 +51,26 @@ export interface CommissionData {
 
 export interface UserProfile {
   id: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  name?: string;
-  avatar_url?: string;
+  phone?: string;
+  city?: string;
+  region?: string;
+  experience_years?: number;
+  close_score?: number;
+  is_premium?: boolean;
+  premium_until?: string | null;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  display_name?: string | null;
+  niche?: string;
+  streak?: number;
+  is_online?: boolean;
+  last_seen?: string | null;
+  onboarding_done?: boolean;
+  target_cash_monthly?: number;
+  target_closes_monthly?: number;
   created_at: string;
   updated_at?: string;
 }
