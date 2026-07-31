@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Heart, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { getLeaderboard, getOnlineProfiles } from "@/services";
+import type { LeaderboardRow, OnlineProfile } from "@/services";
 
 type Profile = {
   id: string;
@@ -17,6 +19,17 @@ type Profile = {
   last_seen?: string | null;
 };
 
+// Minimal shape shared by every "closer" row the sidebar renders — Profile,
+// LeaderboardRow and OnlineProfile are all structurally compatible with it.
+type NameableCloser = {
+  id: string;
+  display_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  close_score?: number | null;
+};
+
 type Post = {
   id: string;
   user_id: string;
@@ -27,13 +40,13 @@ type Post = {
   created_at: string;
 };
 
-const fullName = (p?: Profile) => {
+const fullName = (p?: NameableCloser) => {
   const explicit = p?.display_name || `${p?.first_name ?? ""} ${p?.last_name ?? ""}`.trim();
   if (explicit) return explicit;
   if (p?.email) return p.email.split("@")[0];
   return "Closer";
 };
-const initials = (p?: Profile) => {
+const initials = (p?: NameableCloser) => {
   if (p?.display_name || p?.first_name || p?.last_name) {
     return fullName(p).split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
   }
@@ -50,8 +63,6 @@ const timeAgo = (iso: string) => {
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
   return `${Math.floor(diff / 86400)}j`;
 };
-const isOnline = (p?: Profile) =>
-  !!p?.last_seen && Date.now() - new Date(p.last_seen).getTime() < 5 * 60 * 1000;
 
 const CommunityTab = () => {
   const { user } = useAuth();
@@ -59,7 +70,8 @@ const CommunityTab = () => {
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [likes, setLikes] = useState<Record<string, { count: number; mine: boolean }>>({});
   const [draft, setDraft] = useState("");
-  const [topClosers, setTopClosers] = useState<Profile[]>([]);
+  const [topClosers, setTopClosers] = useState<LeaderboardRow[]>([]);
+  const [onlineMembers, setOnlineMembers] = useState<OnlineProfile[]>([]);
   const [me, setMe] = useState<Profile | null>(null);
 
   const reload = async () => {
@@ -108,12 +120,8 @@ const CommunityTab = () => {
       .eq("id", user.id)
       .single()
       .then(({ data }) => setMe(data as any));
-    supabase
-      .from("profiles")
-      .select("id, email, first_name, last_name, display_name, city, close_score, streak, is_online, last_seen")
-      .order("close_score", { ascending: false, nullsFirst: false })
-      .limit(8)
-      .then(({ data }) => setTopClosers((data as any) ?? []));
+    getLeaderboard("all").then(setTopClosers);
+    getOnlineProfiles(user.id).then(setOnlineMembers);
   }, [user?.id]);
 
   useEffect(() => {
@@ -257,12 +265,12 @@ const CommunityTab = () => {
           <div className="text-[10px] uppercase font-bold mb-2" style={{ color: "#8892a0" }}>Top closers</div>
           <div className="space-y-1.5">
             {topClosers.slice(0, 5).map((c, i) => (
-              <Row key={c.id} medal={i < 3 ? ["🥇","🥈","🥉"][i] : `#${i + 1}`} p={c} />
+              <Row key={c.id} medal={i < 3 ? ["🥇","🥈","🥉"][i] : `#${i + 1}`} p={c} highlight={c.id === user?.id} />
             ))}
-            {me && (
+            {me && !topClosers.slice(0, 5).some((c) => c.id === user?.id) && (
               <>
                 <div className="h-px my-1" style={{ background: "#2a3a50" }} />
-                <Row medal="#12" p={me} highlight />
+                <Row medal={`#${Math.max(topClosers.findIndex((c) => c.id === user?.id) + 1, 6)}`} p={me} highlight />
               </>
             )}
           </div>
@@ -272,7 +280,7 @@ const CommunityTab = () => {
         <div className="rounded-[10px] border-hair p-3" style={{ background: "#161d2e", borderColor: "#2a3a50" }}>
           <div className="text-[10px] uppercase font-bold mb-2" style={{ color: "#8892a0" }}>En ligne</div>
           <div className="space-y-1.5">
-            {topClosers.filter(isOnline).slice(0, 5).map((p) => (
+            {onlineMembers.map((p) => (
               <div key={p.id} className="flex items-center gap-2">
                 <div className="relative">
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold"
@@ -284,7 +292,7 @@ const CommunityTab = () => {
                 <span className="text-[10px] font-bold" style={{ color: "#0EFF9C" }}>{p.close_score ?? 0}</span>
               </div>
             ))}
-            {topClosers.filter(isOnline).length === 0 && (
+            {onlineMembers.length === 0 && (
               <div className="text-[10px]" style={{ color: "#6b7a99" }}>Personne en ligne.</div>
             )}
           </div>
@@ -299,7 +307,7 @@ const Stat = ({ label, color }: { label: string; color: string }) => (
     style={{ background: "#0a0f1a", color }}>{label}</div>
 );
 
-const Row = ({ medal, p, highlight }: { medal: string; p: Profile; highlight?: boolean }) => (
+const Row = ({ medal, p, highlight }: { medal: string; p: NameableCloser; highlight?: boolean }) => (
   <div className="flex items-center gap-2 px-1.5 py-1 rounded-[6px]"
     style={highlight ? { background: "#0EFF9C08", border: "0.5px solid #0EFF9C33" } : undefined}>
     <span className="text-[10px] w-5" style={{ color: highlight ? "#0EFF9C" : "#8892a0" }}>{medal}</span>

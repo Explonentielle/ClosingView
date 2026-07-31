@@ -4,3 +4,5 @@ export * from './stats';
 export * from './auth';
 export * from './profile';
 export * from './closeScore';
+export * from './presence';
+export * from './leaderboard';

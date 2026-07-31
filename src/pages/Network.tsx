@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getOnlineCount } from "@/services";
 import CommunityTab from "@/components/network/CommunityTab";
 import MembersTab from "@/components/network/MembersTab";
 import LeaderboardTab from "@/components/network/LeaderboardTab";
@@ -19,21 +19,7 @@ const Network = () => {
   const [onlineCount, setOnlineCount] = useState(0);
 
   useEffect(() => {
-    supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .then(({ count, error }) => {
-        if (error) {
-          console.error('Error fetching online count:', error);
-          setOnlineCount(0);
-          return;
-        }
-        setOnlineCount(count ?? 0);
-      })
-      .catch((err) => {
-        console.error('Online count error:', err);
-        setOnlineCount(0);
-      });
+    getOnlineCount().then(setOnlineCount);
   }, []);
 
   return (

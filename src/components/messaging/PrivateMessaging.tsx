@@ -3,6 +3,7 @@ import { MessageCircle, X, ArrowLeft, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMessaging, useConversationMessages } from "@/hooks/useMessaging";
+import { isUserOnline } from "@/lib/presence";
 
 type ProfileLite = {
   id: string;
@@ -28,10 +29,6 @@ const timeAgo = (iso: string) => {
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
   return `${Math.floor(diff / 86400)}j`;
 };
-
-const isOnline = (p?: ProfileLite | null) =>
-  !!p?.is_online ||
-  (!!p?.last_seen && Date.now() - new Date(p.last_seen).getTime() < 5 * 60 * 1000);
 
 const useProfiles = (ids: string[]) => {
   const [map, setMap] = useState<Record<string, ProfileLite>>({});
@@ -148,7 +145,7 @@ const ConversationsPanel = ({
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold"
                 style={{ background: "#0EFF9C22", color: "#0EFF9C" }}>{initials(p)}</div>
               <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full"
-                style={{ background: isOnline(p) ? "#0EFF9C" : "#6b7a99", border: "1.5px solid #0f1621" }} />
+                style={{ background: isUserOnline(p) ? "#0EFF9C" : "#6b7a99", border: "1.5px solid #0f1621" }} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
@@ -211,8 +208,8 @@ const ConversationView = ({
           style={{ background: "#0EFF9C22", color: "#0EFF9C" }}>{initials(other)}</div>
         <div className="flex-1 min-w-0">
           <div className="text-[11px] font-bold text-white truncate">{fullName(other)}</div>
-          <div className="text-[9px]" style={{ color: isOnline(other) ? "#0EFF9C" : "#6b7a99" }}>
-            {isOnline(other) ? "• En ligne" : "• Hors ligne"}
+          <div className="text-[9px]" style={{ color: isUserOnline(other) ? "#0EFF9C" : "#6b7a99" }}>
+            {isUserOnline(other) ? "• En ligne" : "• Hors ligne"}
           </div>
         </div>
         <button onClick={onClose} className="text-white opacity-60 hover:opacity-100"><X size={14} /></button>

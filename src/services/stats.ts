@@ -37,24 +37,44 @@ function pickGranularity(spanDays: number): ChartGranularity {
   return 'month';
 }
 
-function bucketKey(date: Date, granularity: ChartGranularity): string {
-  if (granularity === 'month') {
-    return `${date.getFullYear()}-${date.getMonth()}`;
-  }
-  if (granularity === 'week') {
-    const d = new Date(date);
-    const dayOfWeek = (d.getDay() + 6) % 7; // Monday = 0
-    d.setDate(d.getDate() - dayOfWeek);
-    return d.toISOString().split('T')[0];
-  }
-  return date.toISOString().split('T')[0];
+// Anchors a Date at UTC midnight of its LOCAL calendar date. Every bucket
+// computation below reads/writes exclusively via UTC-* accessors afterward,
+// so cursor dates (built from local "now - N days") and real data dates
+// (date-only strings like "2026-07-28", which JS parses as UTC midnight)
+// always land on the same key — mixing local and UTC accessors here was the
+// bug: it made week/month buckets silently diverge and drop real data.
+function toUTCDateOnly(d: Date): Date {
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 }
 
-function formatBucketLabel(date: Date, granularity: ChartGranularity): string {
+// Canonical start of the bucket a date falls into (the day itself, the
+// Monday of its week, or the 1st of its month) — always UTC-midnight-anchored.
+function bucketStart(date: Date, granularity: ChartGranularity): Date {
+  const d = toUTCDateOnly(date);
   if (granularity === 'month') {
-    return date.toLocaleDateString('fr-FR', { month: 'short' });
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
   }
-  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+  if (granularity === 'week') {
+    const dayOfWeek = (d.getUTCDay() + 6) % 7; // Monday = 0
+    d.setUTCDate(d.getUTCDate() - dayOfWeek);
+    return d;
+  }
+  return d;
+}
+
+function bucketKey(anchor: Date, granularity: ChartGranularity): string {
+  if (granularity === 'month') {
+    return `${anchor.getUTCFullYear()}-${anchor.getUTCMonth()}`;
+  }
+  return anchor.toISOString().split('T')[0];
+}
+
+function formatBucketLabel(anchor: Date, granularity: ChartGranularity): string {
+  const opts: Intl.DateTimeFormatOptions = { timeZone: 'UTC' };
+  if (granularity === 'month') {
+    return anchor.toLocaleDateString('fr-FR', { ...opts, month: 'short' });
+  }
+  return anchor.toLocaleDateString('fr-FR', { ...opts, day: '2-digit', month: 'short' });
 }
 
 /**
@@ -73,23 +93,23 @@ function buildBucketedSeries(
   const totals = new Map<string, number>();
   const bucketDates = new Map<string, Date>();
 
-  const cursor = new Date(startDate);
-  cursor.setHours(0, 0, 0, 0);
-  const end = new Date(endDate);
-  end.setHours(0, 0, 0, 0);
+  const cursor = toUTCDateOnly(startDate);
+  const end = toUTCDateOnly(endDate);
 
   while (cursor <= end) {
-    const key = bucketKey(cursor, granularity);
+    const anchor = bucketStart(cursor, granularity);
+    const key = bucketKey(anchor, granularity);
     if (!totals.has(key)) {
       totals.set(key, 0);
-      bucketDates.set(key, new Date(cursor));
+      bucketDates.set(key, anchor);
       order.push(key);
     }
-    cursor.setDate(cursor.getDate() + 1);
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
 
   Object.entries(rawByDate).forEach(([dateStr, value]) => {
-    const key = bucketKey(new Date(dateStr), granularity);
+    const anchor = bucketStart(new Date(dateStr), granularity);
+    const key = bucketKey(anchor, granularity);
     if (totals.has(key)) {
       totals.set(key, (totals.get(key) || 0) + value);
     }

@@ -3,6 +3,7 @@ import { Search, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMessaging } from "@/hooks/useMessaging";
 import { useAuth } from "@/hooks/useAuth";
+import { isUserOnline } from "@/lib/presence";
 
 type Profile = {
   id: string;
@@ -31,9 +32,6 @@ const initials = (p: Profile) => {
   if (p.email) return p.email.split("@")[0].slice(0, 2).toUpperCase();
   return "??";
 };
-const isOnline = (p: Profile) =>
-  !!p.last_seen && Date.now() - new Date(p.last_seen).getTime() < 5 * 60 * 1000;
-
 const MembersTab = () => {
   const { user } = useAuth();
   const { openConversation } = useMessaging();
@@ -53,7 +51,7 @@ const MembersTab = () => {
   const filtered = useMemo(() => {
     const term = q.toLowerCase().trim();
     return members
-      .filter((m) => (filter === "online" ? isOnline(m) : true))
+      .filter((m) => (filter === "online" ? isUserOnline(m) : true))
       .filter((m) => {
         if (!term) return true;
         return [fullName(m), m.city, m.niche].some((s) => (s ?? "").toLowerCase().includes(term));
@@ -79,7 +77,7 @@ const MembersTab = () => {
 
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
         {filtered.map((m) => {
-          const online = isOnline(m);
+          const online = isUserOnline(m);
           return (
             <div key={m.id} className="rounded-[10px] border-hair p-3 flex flex-col gap-2 transition-colors"
               style={{ background: "#161d2e", borderColor: "#2a3a50", opacity: online ? 1 : 0.55 }}

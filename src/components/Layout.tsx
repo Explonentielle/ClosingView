@@ -8,6 +8,7 @@ import { MessagingProvider } from "@/hooks/useMessaging";
 import PrivateMessaging from "@/components/messaging/PrivateMessaging";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import { useProfile } from "@/hooks/useProfile";
+import { usePresence } from "@/hooks/usePresence";
 
 const titleMap: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -25,6 +26,7 @@ const Layout = () => {
   const isDashboard = pathname.startsWith("/dashboard");
   const [openSaisir, setOpenSaisir] = useState(false);
   const { profile } = useProfile();
+  usePresence();
 
   return (
     <MessagingProvider>
